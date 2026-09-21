@@ -19,7 +19,7 @@ export default tseslint.config(
           // Order: ~accessibility id -> id/resource-id -> -android uiautomator
           // / -ios predicate string -> -ios class chain.
           selector:
-            "CallExpression[callee.name=/^\\$\\$?$/] > Literal:first-child[value=/^(\\/\\/|\\(|xpath=)/]",
+            'CallExpression[callee.name=/^\\$\\$?$/] > Literal:first-child[value=/^(\\/\\/|\\(|xpath=)/]',
           message:
             'XPath is not allowed. Use ~accessibility id, then id/resource-id, then -android uiautomator / -ios predicate string, then -ios class chain.',
         },
@@ -27,8 +27,7 @@ export default tseslint.config(
           // Mobile equivalent of the page.waitForTimeout() ban. WDIO does
           // auto-wait: measured, a click on a non-existent selector takes
           // exactly waitforTimeout (10,026 ms) before it fails.
-          selector:
-            "CallExpression[callee.object.name='browser'][callee.property.name='pause']",
+          selector: "CallExpression[callee.object.name='browser'][callee.property.name='pause']",
           message:
             'browser.pause() is not used. WDIO auto-waits: use waitForDisplayed/waitForExist or an expect-webdriverio assertion.',
         },

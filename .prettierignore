@@ -1,0 +1,9 @@
+node_modules/
+package-lock.json
+logs/
+dumps/
+apps/
+
+# Skills are copied verbatim from the web repository and every changed line is
+# the cost the port measures. Prettier is not allowed to spend that budget.
+.claude/

@@ -29,18 +29,18 @@ Phase 1 established the baseline at **0**. Every later change is the cost.
 
 ## 2. Decisions already closed — do not reopen
 
-| # | Decision | Rationale |
-| --- | --- | --- |
-| 1 | **SUT: `saucelabs/my-demo-app-android` 2.2.0** (`mda-2.2.0-25.apk`) | Same vendor as saucedemo, so the comparison is clean. Self-contained APK. No release since 2024-11-14, which for a SUT is stability, not staleness |
-| 2 | **Android first, iOS second** | Not because iOS is expensive — Xcode 16.2 and the iOS 17.5 runtime are already installed. Because the APK is one file, the AVD already exists, and content-desc coverage lets the first tickets test the AI layer instead of selector archaeology. iOS is where the XPath question gets its real evidence |
-| 3 | **Separate repo, not a monorepo** | Sharing a folder would keep the web `CLAUDE.md` in context and contaminate the portability experiment |
-| 4 | **XPath stays a build-breaking `error`** | See §5. The premise that mobile forces XPath was measured false |
+| #   | Decision                                                            | Rationale                                                                                                                                                                                                                                                                                                 |
+| --- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **SUT: `saucelabs/my-demo-app-android` 2.2.0** (`mda-2.2.0-25.apk`) | Same vendor as saucedemo, so the comparison is clean. Self-contained APK. No release since 2024-11-14, which for a SUT is stability, not staleness                                                                                                                                                        |
+| 2   | **Android first, iOS second**                                       | Not because iOS is expensive — Xcode 16.2 and the iOS 17.5 runtime are already installed. Because the APK is one file, the AVD already exists, and content-desc coverage lets the first tickets test the AI layer instead of selector archaeology. iOS is where the XPath question gets its real evidence |
+| 3   | **Separate repo, not a monorepo**                                   | Sharing a folder would keep the web `CLAUDE.md` in context and contaminate the portability experiment                                                                                                                                                                                                     |
+| 4   | **XPath stays a build-breaking `error`**                            | See §5. The premise that mobile forces XPath was measured false                                                                                                                                                                                                                                           |
 
 **Web + mobile in one WDIO framework was considered and rejected.** Measured: the
 same `LoginPage` written for both differs in 13 of 36 lines — and the shared 23
 are method signatures and bodies, while the differing 13 are the locators and
 navigation, i.e. exactly where maintenance lives. The two SUTs share **zero** test
-data (`standard_user` vs `bod@example.com`). Share the *criteria*
+data (`standard_user` vs `bod@example.com`). Share the _criteria_
 (`.claude/skills/`), not the code.
 
 ---
@@ -67,10 +67,10 @@ What exists: `wdio.android.conf.ts`, `src/components/Header.ts`,
 **Jira is set up.** Project **`OR` — ORGRIMMAR** (software, next-gen), the Horde
 counterpart to the web project's `SW` — STORMWIND. Three tickets are written:
 
-| Ticket | Subject | Exercises |
-| --- | --- | --- |
-| **OR-1** | A shopper signs in from the menu and returns to the catalog | The session redesign — mobile has no `storageState` |
-| **OR-2** | Adding a product updates the cart badge and the cart contents | Page Object composition, and the one genuinely hard locator |
+| Ticket   | Subject                                                           | Exercises                                                           |
+| -------- | ----------------------------------------------------------------- | ------------------------------------------------------------------- |
+| **OR-1** | A shopper signs in from the menu and returns to the catalog       | The session redesign — mobile has no `storageState`                 |
+| **OR-2** | Adding a product updates the cart badge and the cart contents     | Page Object composition, and the one genuinely hard locator         |
 | **OR-3** | A cart that already holds products survives leaving and returning | The direct analogue of SW-21 — same requirement, different platform |
 
 ---
@@ -107,30 +107,32 @@ bottleneck in the fix loop.
 Benchmarked on API 35 / Apple Silicon, **n=12 interleaved rounds** (a blocked run
 inflated XPath by ~60%, so interleave — the ranking held but the magnitude did not):
 
-| Level | Strategy | Median |
-| --- | --- | --- |
-| 1 | `~accessibility id` (content-desc / accessibilityIdentifier) | 10 ms |
-| 2 | `id=` (resource-id) | 9 ms |
-| 3 | `-android uiautomator` (`UiSelector`) / `-ios predicate string` | 13 ms |
-| 4 | `-ios class chain` | — |
-| — | **XPath — forbidden, fails the build** | 26-28 ms |
+| Level | Strategy                                                        | Median   |
+| ----- | --------------------------------------------------------------- | -------- |
+| 1     | `~accessibility id` (content-desc / accessibilityIdentifier)    | 10 ms    |
+| 2     | `id=` (resource-id)                                             | 9 ms     |
+| 3     | `-android uiautomator` (`UiSelector`) / `-ios predicate string` | 13 ms    |
+| 4     | `-ios class chain`                                              | —        |
+| —     | **XPath — forbidden, fails the build**                          | 26-28 ms |
 
 Across the 4 screens the first tickets touch: **55 clickables, 27 ambiguous,
 0 that require XPath.**
 
-| Screen | Clickables | Ambiguous |
-| --- | --- | --- |
-| Catalog | 29 | 26 (20 are rating stars ×4 cards, 6 are product images) |
-| Login | 8 | 0 |
-| Product detail | 11 | 1 |
-| Cart | 7 | 0 |
+| Screen         | Clickables | Ambiguous                                               |
+| -------------- | ---------- | ------------------------------------------------------- |
+| Catalog        | 29         | 26 (20 are rating stars ×4 cards, 6 are product images) |
+| Login          | 8          | 0                                                       |
+| Product detail | 11         | 1                                                       |
+| Cart           | 7          | 0                                                       |
 
 **The hard case is solved without XPath.** Tapping one product image among six
 identical ones, in a card that has no resource-id and no content-desc of its own,
 discriminated by the sibling title:
 
 ```ts
-$(`android=new UiSelector().text("${name}").fromParent(new UiSelector().resourceId("${PKG}/productIV"))`)
+$(
+  `android=new UiSelector().text("${name}").fromParent(new UiSelector().resourceId("${PKG}/productIV"))`,
+);
 // 1 match, 26 ms — verified, and it navigates
 ```
 
@@ -143,7 +145,7 @@ Appium's own docs name sibling navigation as XPath's legitimate niche. On Androi
    a strict-mode violation. Counting matches matters more here, not less.
 2. The XPath a person would naturally write for that card —
    `//ViewGroup[.//TextView[@text="…"]]//ImageView` — returns **6 matches** and
-   nothing warns you. Slower *and* easier to get silently wrong.
+   nothing warns you. Slower _and_ easier to get silently wrong.
 
 **On iOS** (phase 4): `accessibilityIdentifier` appears **0 times** in
 `saucelabs/my-demo-app-ios` source. The search index was validated before trusting
@@ -159,13 +161,13 @@ Confirm with a page source dump before deciding anything for iOS.
 
 ## 6. Obstacles already solved — do not re-solve these
 
-| # | Symptom | Cause | Fix (already applied) |
-| --- | --- | --- | --- |
-| 1 | `npm i -g appium` fails EACCES | node lives in `/usr/local`, global installs need root | Install Appium **local** to the project. The port needs that anyway |
-| 2 | `Could not find a driver for automationName 'UiAutomator2'` with the driver correctly installed | **Appium 3 resolves drivers against the `package.json` of the working directory**, not `~/.appium` | Start the server from the project root. `@wdio/appium-service` does this; `APPIUM_HOME` is pinned in the script |
-| 3 | `TS2353: 'capabilities' does not exist in type 'Testrunner'` | WDIO 9 changed the config type | Use `WebdriverIO.Config`, not `Options.Testrunner` |
-| 4 | `$$(...)` then `.map()` does not typecheck | `$$` returns a `ChainablePromiseArray`, not an array | Use the chainable's own `.map()`: `$$(sel).map(e => e.getText())` |
-| 5 | Test fails on `~View menu` after a full 10 s auto-wait; page source is 7928 bytes with **zero** content-desc | A **system dialog** (`package="android"`) was covering the app: *"Messages isn't responding"*. The `google_apis_playstore` image ships Google apps that ANR and steal the foreground | `scripts/start-emulator.sh` disables `messaging`, `maps` and `photos` as a preflight |
+| #   | Symptom                                                                                                      | Cause                                                                                                                                                                                | Fix (already applied)                                                                                           |
+| --- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| 1   | `npm i -g appium` fails EACCES                                                                               | node lives in `/usr/local`, global installs need root                                                                                                                                | Install Appium **local** to the project. The port needs that anyway                                             |
+| 2   | `Could not find a driver for automationName 'UiAutomator2'` with the driver correctly installed              | **Appium 3 resolves drivers against the `package.json` of the working directory**, not `~/.appium`                                                                                   | Start the server from the project root. `@wdio/appium-service` does this; `APPIUM_HOME` is pinned in the script |
+| 3   | `TS2353: 'capabilities' does not exist in type 'Testrunner'`                                                 | WDIO 9 changed the config type                                                                                                                                                       | Use `WebdriverIO.Config`, not `Options.Testrunner`                                                              |
+| 4   | `$$(...)` then `.map()` does not typecheck                                                                   | `$$` returns a `ChainablePromiseArray`, not an array                                                                                                                                 | Use the chainable's own `.map()`: `$$(sel).map(e => e.getText())`                                               |
+| 5   | Test fails on `~View menu` after a full 10 s auto-wait; page source is 7928 bytes with **zero** content-desc | A **system dialog** (`package="android"`) was covering the app: _"Messages isn't responding"_. The `google_apis_playstore` image ships Google apps that ANR and steal the foreground | `scripts/start-emulator.sh` disables `messaging`, `maps` and `photos` as a preflight                            |
 
 Obstacle 5 is the lesson of Phase 1: the failure was neither the app nor the test,
 and the accessibility tree does not tell you "a dialog is on top" — it tells you
@@ -195,7 +197,7 @@ Measured density of Playwright-specific mentions per file (excluding the vendore
 1. **`storageState` has no analogue.** Measured: nothing survives process death
    (§8). It is login-per-test, or keeping the process alive between tests.
 2. **`test.step` does not exist in WDIO.** This is the blocking one.
-   `report-bug` is the most portable skill by density — and its *input* is the
+   `report-bug` is the most portable skill by density — and its _input_ is the
    `test.step` titles that Page Objects wrap actions in. Without an equivalent
    helper the skill ports and does not work. Build the helper before porting it.
 3. **Playwright traces.** No analogue. Closest: screen recording + the Appium
@@ -214,17 +216,17 @@ Measured density of Playwright-specific mentions per file (excluding the vendore
 
 **Session and cart lifetime** (2026-09-18, re-checked 2026-09-21):
 
-| Event | Cart | Session |
-| --- | --- | --- |
-| app backgrounded 3 s, then resumed | **survives** | survives |
-| process terminated and relaunched | **empty** | logged out |
+| Event                              | Cart         | Session    |
+| ---------------------------------- | ------------ | ---------- |
+| app backgrounded 3 s, then resumed | **survives** | survives   |
+| process terminated and relaunched  | **empty**    | logged out |
 
 **Cart badge** (`cartTV`), 2026-09-21:
 
-| State | Badge |
-| --- | --- |
-| cart empty | **absent from the view tree** — not zero |
-| 1 unit added | `"1"` |
+| State                  | Badge                                                       |
+| ---------------------- | ----------------------------------------------------------- |
+| cart empty             | **absent from the view tree** — not zero                    |
+| 1 unit added           | `"1"`                                                       |
 | 2 units of one product | `"2"`, and the cart shows one row with a total of "2 Items" |
 
 The badge and the total count **units**, not distinct products. The absent-not-zero
@@ -235,15 +237,15 @@ behaviour matches the web app, and SW-21 makes the same note.
 
 **Login validation** (2026-09-21, each case from a freshly restarted app):
 
-| Input | Result |
-| --- | --- |
-| `bod@example.com` + `10203040` | enters the catalog |
-| empty username | stays, "Username is required" |
-| empty password | stays, "Enter Password" |
+| Input                            | Result                                        |
+| -------------------------------- | --------------------------------------------- |
+| `bod@example.com` + `10203040`   | enters the catalog                            |
+| empty username                   | stays, "Username is required"                 |
+| empty password                   | stays, "Enter Password"                       |
 | `alice@example.com` + `10203040` | stays, "Sorry this user has been locked out." |
-| `bod@example.com` + `xxxxxxxx` | **enters the catalog** |
-| `bod@example.com` + `1` | **enters the catalog** |
-| `nadie@example.com` + `10203040` | **enters the catalog** |
+| `bod@example.com` + `xxxxxxxx`   | **enters the catalog**                        |
+| `bod@example.com` + `1`          | **enters the catalog**                        |
+| `nadie@example.com` + `10203040` | **enters the catalog**                        |
 
 **The app validates neither the username nor the password against any list** — it
 checks both fields are non-empty and special-cases the locked-out user. This is
@@ -260,8 +262,8 @@ framework already enforces against `browser.pause()`.
 
 **These did not travel.** They lived in the web repo's `CLAUDE.md`, which is not
 in this repository. Writing this repo's own `CLAUDE.md` is the first task of
-Phase 2 — and it is the whole lesson of the port: *a rule that is not inside the
-skill directory does not exist for the next repo.*
+Phase 2 — and it is the whole lesson of the port: _a rule that is not inside the
+skill directory does not exist for the next repo._
 
 **Composition rules** (from ADR-0001, all still apply except where noted):
 
@@ -269,7 +271,7 @@ skill directory does not exist for the next repo.*
 2. A Page composes Components and holds page-unique locators. Never composes other Pages.
 3. **Pages never return other Pages.** Methods return `void` or data. Navigation lives in the spec.
 4. Tests know Pages and Data only. Never raw locators or Components.
-   *Adapted:* without Playwright fixtures this is convention + lint, not a technical barrier.
+   _Adapted:_ without Playwright fixtures this is convention + lint, not a technical barrier.
 5. All locator/component fields are `readonly`, set in the constructor.
 6. Constructor order: composed Components first, page-direct locators second.
 7. Action methods read like English.
@@ -277,9 +279,9 @@ skill directory does not exist for the next repo.*
 9. A Component scoped to one of many similar elements takes a discriminator.
 10. Refactor a page-direct locator into a Component the moment a 2nd page needs it.
 11. Component nesting depth ≤ 2.
-12. No arbitrary sleeps. *Adapted:* `browser.pause()` instead of `page.waitForTimeout()`.
+12. No arbitrary sleeps. _Adapted:_ `browser.pause()` instead of `page.waitForTimeout()`.
 
-*Adaptation:* Page Objects are exported as **singletons** (`export default new LoginPage()`),
+_Adaptation:_ Page Objects are exported as **singletons** (`export default new LoginPage()`),
 because there are no fixtures to inject them.
 
 **Governance — all of this ports unchanged:**
@@ -309,7 +311,11 @@ because there are no fixtures to inject them.
 - **`gh` CLI for GitHub, Atlassian MCP for Jira.** No GitHub MCP server
   (ADR-0007, scoped by ADR-0011). `.mcp.json` needs the Atlassian entry:
   ```json
-  { "mcpServers": { "atlassian": { "type": "http", "url": "https://mcp.atlassian.com/v1/mcp/authv2" } } }
+  {
+    "mcpServers": {
+      "atlassian": { "type": "http", "url": "https://mcp.atlassian.com/v1/mcp/authv2" }
+    }
+  }
   ```
 
 **ADR numbering — important.** The skills cite **20 distinct ADR numbers in plain
@@ -394,7 +400,7 @@ measurement says are almost pure judgment — worked without being rewritten.
 
 ---
 
-## 13. The web repo — read it for the *why*, not the *what*
+## 13. The web repo — read it for the _why_, not the _what_
 
 The sibling repository is available two ways:
 
@@ -404,14 +410,14 @@ The sibling repository is available two ways:
 
 **Worth reading, in this order:**
 
-| File | Why |
-| --- | --- |
-| `docs/failure-modes.md` | Where the framework actually broke, and what catches it now. The most valuable page in that repo |
-| `docs/adr/README.md` | The two-layer model (present vs log), the admission bar, the `Enforced by:` rule and the budget |
-| `docs/roadmap-post-oct-2026.md` §"Principios NO NEGOCIABLES" | The six principles in §14 below, in full |
-| `docs/architecture.md` | How the layers fit |
-| `docs/triage.md` | The workflow behind "triage is a human decision" |
-| `CONTRIBUTING.md` | Commit and PR conventions |
+| File                                                         | Why                                                                                              |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `docs/failure-modes.md`                                      | Where the framework actually broke, and what catches it now. The most valuable page in that repo |
+| `docs/adr/README.md`                                         | The two-layer model (present vs log), the admission bar, the `Enforced by:` rule and the budget  |
+| `docs/roadmap-post-oct-2026.md` §"Principios NO NEGOCIABLES" | The six principles in §14 below, in full                                                         |
+| `docs/architecture.md`                                       | How the layers fit                                                                               |
+| `docs/triage.md`                                             | The workflow behind "triage is a human decision"                                                 |
+| `CONTRIBUTING.md`                                            | Commit and PR conventions                                                                        |
 
 **The caution, and it matters:** read it for judgment and rationale, **not to copy
 saucedemo specifics**. This port was deliberately started in a fresh session
@@ -464,7 +470,7 @@ drifting from reality, not code defects.** That is what the gates are mostly for
 - A documented command that could not run (`playwright-cli` is not on `PATH`).
   → a linter fails on any bash block invoking a binary that only exists in
   `node_modules/.bin`. **Nothing executes documentation unless you make it.**
-- A green run whose TCMS record said the opposite — the reader took the *first*
+- A green run whose TCMS record said the opposite — the reader took the _first_
   attempt of a flaky test. → the last attempt decides.
 - An observation whose cause was fixed but which was listed forever.
 - A race one browser was fast enough to hide — `goto()` returned before the list
@@ -477,9 +483,9 @@ check, or expect the drift.
 
 ### The honesty rule for docs
 
-From `docs/failure-modes.md`: *every claim is verified against the code, or it
+From `docs/failure-modes.md`: _every claim is verified against the code, or it
 says it is unmeasured. Nothing is an estimate dressed as a fact. A page that only
-lists solved problems is marketing.* Where something has no mitigation, list it
+lists solved problems is marketing._ Where something has no mitigation, list it
 anyway.
 
 ### Gaps that carry over unchanged
@@ -487,7 +493,7 @@ anyway.
 These were never solved over there and are not solved here either:
 
 - **A plausible-but-wrong test passes every gate.** Every mechanism catches a
-  *wrong* selector; nothing catches a test that passes, asserts something true,
+  _wrong_ selector; nothing catches a test that passes, asserts something true,
   and misses the point of the criterion. A human reviewer is the only thing that
   does. This is why the PR body carries the agent's reasoning and assumptions.
 - **Token cost per ticket is unmeasured.** `/skill-doctor`'s `7d tokens` column
@@ -495,7 +501,7 @@ These were never solved over there and are not solved here either:
 - **No test-data isolation exists**, because neither SUT needs any.
 - **The framework has never faced an application that changes.** Both SUTs are
   frozen, so every claim about selector durability is theoretical — including the
-  measurements in §5, which prove *uniqueness today*, not durability.
+  measurements in §5, which prove _uniqueness today_, not durability.
 - **One author.** Whether these conventions survive a second person is untested.
 
 ---

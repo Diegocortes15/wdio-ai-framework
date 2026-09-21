@@ -12,12 +12,12 @@ and the governance rules. If 2-3 tickets come through clean here, it holds.
 The skills were copied **verbatim**, not one line changed. That is the starting
 point the port is measured against:
 
-| | |
-| --- | --- |
-| Skill lines ported | 3338 |
-| Lines changed | **0** |
-| Portability grep (ADR-0019) | clean |
-| Known debt | 5 rules stated only by reference to a `CLAUDE.md` that does not exist here |
+|                             |                                                                            |
+| --------------------------- | -------------------------------------------------------------------------- |
+| Skill lines ported          | 3338                                                                       |
+| Lines changed               | **0**                                                                      |
+| Portability grep (ADR-0019) | clean                                                                      |
+| Known debt                  | 5 rules stated only by reference to a `CLAUDE.md` that does not exist here |
 
 `playwright-cli` was **not** ported: it is Playwright-specific. `@wdio/mcp` replaces it.
 
@@ -36,13 +36,13 @@ Requires `ANDROID_HOME`, `JAVA_HOME` and `platform-tools` on the PATH.
 
 Preference order, with the measured cost behind it (API 35, Apple Silicon):
 
-| Level | Strategy | Median |
-| --- | --- | --- |
-| 1 | `~accessibility id` (content-desc) | 10 ms |
-| 2 | `id=` (resource-id) | 9 ms |
-| 3 | `-android uiautomator` / `-ios predicate string` | 13 ms |
-| 4 | `-ios class chain` | — |
-| — | **XPath: forbidden, fails the build** | 26-28 ms |
+| Level | Strategy                                         | Median   |
+| ----- | ------------------------------------------------ | -------- |
+| 1     | `~accessibility id` (content-desc)               | 10 ms    |
+| 2     | `id=` (resource-id)                              | 9 ms     |
+| 3     | `-android uiautomator` / `-ios predicate string` | 13 ms    |
+| 4     | `-ios class chain`                               | —        |
+| —     | **XPath: forbidden, fails the build**            | 26-28 ms |
 
 Across the 4 screens of the SUT: 55 clickables, 27 ambiguous, **0 that require
 XPath**. The hard case — tapping one product image among six identical ones,
