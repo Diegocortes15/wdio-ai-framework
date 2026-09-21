@@ -1,0 +1,103 @@
+{
+  "records": [
+    {
+      "title": "\"Log In\" in the menu opens the login screen with its username, password and Login controls",
+      "acText": "WHEN the shopper opens the burger menu on the catalog and taps \"Log In\", the login screen shall display the username field, the password field and the Login button.",
+      "user": "no-auth",
+      "tags": [],
+      "bucket": "Positive",
+      "feature": "login",
+      "contextLabel": "no auth",
+      "jira": [{ "key": "OR-1", "url": "https://diegocortes15.atlassian.net/browse/OR-1" }],
+      "steps": ["Open the login screen from the menu"]
+    },
+    {
+      "title": "an empty username is rejected with \"Username is required\"",
+      "acText": "IF the shopper submits password 10203040 with the username empty, THEN the login screen shall display \"Username is required\".",
+      "user": "no-auth",
+      "tags": [],
+      "bucket": "Negative",
+      "feature": "login",
+      "contextLabel": "no auth",
+      "jira": [{ "key": "OR-1", "url": "https://diegocortes15.atlassian.net/browse/OR-1" }],
+      "steps": ["Open the login screen from the menu", "Submit credentials for \"\""]
+    },
+    {
+      "title": "an empty password is rejected with \"Enter Password\"",
+      "acText": "IF the shopper submits bod@example.com with the password empty, THEN the login screen shall display \"Enter Password\".",
+      "user": "bod@example.com",
+      "tags": [],
+      "bucket": "Negative",
+      "feature": "login",
+      "contextLabel": "no auth",
+      "jira": [{ "key": "OR-1", "url": "https://diegocortes15.atlassian.net/browse/OR-1" }],
+      "steps": ["Open the login screen from the menu", "Submit credentials for \"bod@example.com\""]
+    },
+    {
+      "title": "alice@example.com is rejected as locked out @smoke",
+      "acText": "IF the shopper submits alice@example.com with password 10203040, THEN the login screen shall display \"Sorry this user has been locked out.\"",
+      "user": "alice@example.com",
+      "tags": ["@smoke"],
+      "bucket": "Negative",
+      "feature": "login",
+      "contextLabel": "no auth",
+      "jira": [{ "key": "OR-1", "url": "https://diegocortes15.atlassian.net/browse/OR-1" }],
+      "steps": [
+        "Open the login screen from the menu",
+        "Submit credentials for \"alice@example.com\""
+      ]
+    },
+    {
+      "title": "a wrong password does not open the catalog",
+      "acText": "IF the shopper submits bod@example.com with the wrong password xxxxxxxx, THEN the app shall keep the shopper on the login screen instead of opening the catalog.",
+      "user": "bod@example.com",
+      "tags": [],
+      "bucket": "Negative",
+      "feature": "login",
+      "contextLabel": "no auth",
+      "jira": [{ "key": "OR-1", "url": "https://diegocortes15.atlassian.net/browse/OR-1" }],
+      "steps": [
+        "Open the login screen from the menu",
+        "Submit credentials for \"bod@example.com\""
+      ],
+      "expectedFailure": {
+        "key": "OR-4",
+        "url": "https://diegocortes15.atlassian.net/browse/OR-4",
+        "reason": "The app signs bod@example.com in with any non-empty password."
+      }
+    },
+    {
+      "title": "a username with no account does not open the catalog",
+      "acText": "IF the shopper submits nadie@example.com, a username that belongs to no account, with password 10203040, THEN the app shall keep the shopper on the login screen instead of opening the catalog.",
+      "user": "nadie@example.com",
+      "tags": [],
+      "bucket": "Negative",
+      "feature": "login",
+      "contextLabel": "no auth",
+      "jira": [{ "key": "OR-1", "url": "https://diegocortes15.atlassian.net/browse/OR-1" }],
+      "steps": [
+        "Open the login screen from the menu",
+        "Submit credentials for \"nadie@example.com\""
+      ],
+      "expectedFailure": {
+        "key": "OR-4",
+        "url": "https://diegocortes15.atlassian.net/browse/OR-4",
+        "reason": "The app signs in any username that belongs to no account."
+      }
+    },
+    {
+      "title": "the lockout message wins over a wrong password for alice@example.com",
+      "acText": "IF the shopper submits alice@example.com with the wrong password xxxxxxxx, THEN the login screen shall display \"Sorry this user has been locked out.\"",
+      "user": "alice@example.com",
+      "tags": [],
+      "bucket": "Edge",
+      "feature": "login",
+      "contextLabel": "no auth",
+      "jira": [{ "key": "OR-1", "url": "https://diegocortes15.atlassian.net/browse/OR-1" }],
+      "steps": [
+        "Open the login screen from the menu",
+        "Submit credentials for \"alice@example.com\""
+      ]
+    }
+  ]
+}
