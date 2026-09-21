@@ -1,0 +1,52 @@
+name: Qase catalogue sync
+
+# Mirrors the committed test records into Qase when they change on main (ADR-0041).
+# It reads .tcms/records/ only — it does not run the suite, so it needs no emulator.
+on:
+  push:
+    branches: [main]
+    paths: ['.tcms/records/**']
+  workflow_dispatch:
+
+concurrency:
+  group: tcms-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # commit the refreshed qase-map.json back
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Unit-test the sync before it touches Qase
+        run: npm run test:unit
+
+      - name: Sync test cases to Qase
+        env:
+          QASE_API_TOKEN: ${{ secrets.QASE_API_TOKEN }}
+          QASE_PROJECT_CODE: ${{ secrets.QASE_PROJECT_CODE }}
+        run: npm run tcms:sync
+
+      # Keep the committed map equal to the live case ids. `[skip ci]` stops this
+      # commit from triggering the workflow again.
+      - name: Commit refreshed qase-map.json
+        run: |
+          if [ -n "$(git status --porcelain qase-map.json)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add qase-map.json
+            git commit -m "chore(tcms): refresh qase-map.json [skip ci]"
+            git push origin "HEAD:${{ github.ref_name }}"
+          else
+            echo "qase-map.json unchanged — nothing to commit."
+          fi
