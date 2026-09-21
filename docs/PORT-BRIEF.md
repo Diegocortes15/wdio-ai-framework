@@ -378,12 +378,137 @@ measurement says are almost pure judgment — worked without being rewritten.
 
 ---
 
-## 12. Still open
+## 12. Scope decisions taken 2026-09-21
 
-- **The first two tickets' implementation.** OR-1, OR-2 and OR-3 exist in Jira and
-  are written to the house standard (Context / Measured before writing /
-  Acceptance criteria / Notes / Out of scope), but no test has been generated from
-  any of them yet. That is Phase 3.
-- **Two findings are parked in tickets, waiting on a human**, per ADR-0030:
-  the credential validation in OR-1, and cart loss on process death in OR-3.
-  Neither is an acceptance criterion. Neither is for the agent to settle.
+- **CI: none for now.** Everything runs local. Mobile CI needs an emulator, and
+  the system image here is arm64 while cheap Linux runners are x86 — a real
+  decision, deferred. **BrowserStack is the intended direction** when it happens,
+  not self-hosted runners. Do not build CI speculatively (see principle 1 below).
+- **TCMS / Qase: out of scope for now.** The web repo mirrors cases to Qase; this
+  repo does not, and will not until the thesis is answered. It adds surface and
+  contributes nothing to the question being asked. When it does come: Diego will
+  create a **separate Qase project for mobile**, expected to be **shared between
+  Android and iOS** rather than one per platform.
+- **Tickets:** Diego reviews OR-1/2/3 and runs `/refine-ticket` on them himself.
+  Treat their acceptance criteria as draft until he has.
+
+---
+
+## 13. The web repo — read it for the *why*, not the *what*
+
+The sibling repository is available two ways:
+
+- **Locally** at `/Users/diego.cortes/Desktop/Diego/playwright-ia-automation-framework-saucedemo`
+  — read files directly, no API limits. This is the better route.
+- **On GitHub** at <https://github.com/Diegocortes15/playwright-ai-framework>.
+
+**Worth reading, in this order:**
+
+| File | Why |
+| --- | --- |
+| `docs/failure-modes.md` | Where the framework actually broke, and what catches it now. The most valuable page in that repo |
+| `docs/adr/README.md` | The two-layer model (present vs log), the admission bar, the `Enforced by:` rule and the budget |
+| `docs/roadmap-post-oct-2026.md` §"Principios NO NEGOCIABLES" | The six principles in §14 below, in full |
+| `docs/architecture.md` | How the layers fit |
+| `docs/triage.md` | The workflow behind "triage is a human decision" |
+| `CONTRIBUTING.md` | Commit and PR conventions |
+
+**The caution, and it matters:** read it for judgment and rationale, **not to copy
+saucedemo specifics**. This port was deliberately started in a fresh session
+precisely because a context full of saucedemo detail biases the work toward
+copying instead of deciding. If you find yourself transcribing a Page Object, a
+tag table or a selector, stop — those are `what`, and the mobile app is a
+different app. The `why` is what travels.
+
+---
+
+## 14. Lessons the web repo paid for — carry these
+
+### The six non-negotiable principles
+
+1. **YAGNI.** Do not extract an abstraction without a real second consumer. Do not
+   build a skill, an MCP server or a gate before something actually needs it.
+2. **Human in the loop, permanently.** AI proposes, a human decides. **No
+   auto-healing agents** that fix what the AI itself broke. The AI never decides
+   on its own to fix something and reopen a PR.
+3. **Authoring versus runtime.** The AI authors; runtime is always deterministic.
+   Prefer a script over an instruction buried in a skill.
+4. **ADR discipline.** Append-only. Admission bar: it must affect structure, key
+   quality attributes, or be hard to reverse. ADRs are a decision log, **not a
+   design guide** — if answering "how does X work today?" requires reading two
+   ADRs, you are reading an audit log to learn the present. Present lives in
+   mutable docs; the log lives in `docs/adr/`. Count only originating decisions
+   against the budget.
+5. **Antipatterns already ruled out** — do not reintroduce them: no subagent
+   running the test suite (the full failure output is needed); no sequential
+   subagent pipelines (information is lost at handoffs); no "expert persona"
+   subagents; no full spec-driven-development ceremony per ticket (proposal +
+   spec + design + tasks is bureaucratic theatre for UI tests — the Jira ticket,
+   its ACs, the Page Object and atomic tests already are that); no separate
+   `tasks.md`/`progress.md` system, because Jira is the progress log; no formal
+   multi-agent orchestrator at this scale.
+6. **Large refactors: propose first and wait.** Do not overturn a decision already
+   taken without new evidence.
+
+### What actually broke over there, and the pattern
+
+Seven failures were recorded. **Six of the seven were documentation or records
+drifting from reality, not code defects.** That is what the gates are mostly for.
+
+- A decision recorded and never implemented — ADR-0004 sat `Accepted` for **4
+  months** stating the opposite of what the config did. → every ADR now declares
+  `Enforced by:`, and a script fails the build when config contradicts one.
+- A skill's reference table drifting from the code it described — a component
+  landed, no row was added, and `/scaffold-page-object` **aborted on every
+  invocation for 3 months**. → signatures are reconciled in both directions.
+- A documented command that could not run (`playwright-cli` is not on `PATH`).
+  → a linter fails on any bash block invoking a binary that only exists in
+  `node_modules/.bin`. **Nothing executes documentation unless you make it.**
+- A green run whose TCMS record said the opposite — the reader took the *first*
+  attempt of a flaky test. → the last attempt decides.
+- An observation whose cause was fixed but which was listed forever.
+- A race one browser was fast enough to hide — `goto()` returned before the list
+  rendered; chromium always won, WebKit lost one run in five.
+- A PR merged into an already-merged branch.
+
+**Apply the pattern here:** the things most likely to rot in this repo are the
+brief you are reading, the skill references, and any claim in a README. Write the
+check, or expect the drift.
+
+### The honesty rule for docs
+
+From `docs/failure-modes.md`: *every claim is verified against the code, or it
+says it is unmeasured. Nothing is an estimate dressed as a fact. A page that only
+lists solved problems is marketing.* Where something has no mitigation, list it
+anyway.
+
+### Gaps that carry over unchanged
+
+These were never solved over there and are not solved here either:
+
+- **A plausible-but-wrong test passes every gate.** Every mechanism catches a
+  *wrong* selector; nothing catches a test that passes, asserts something true,
+  and misses the point of the criterion. A human reviewer is the only thing that
+  does. This is why the PR body carries the agent's reasoning and assumptions.
+- **Token cost per ticket is unmeasured.** `/skill-doctor`'s `7d tokens` column
+  could not be verified and nothing rests on it.
+- **No test-data isolation exists**, because neither SUT needs any.
+- **The framework has never faced an application that changes.** Both SUTs are
+  frozen, so every claim about selector durability is theoretical — including the
+  measurements in §5, which prove *uniqueness today*, not durability.
+- **One author.** Whether these conventions survive a second person is untested.
+
+---
+
+## 15. Still open — answer before Phase 3
+
+- **The two parked findings**, per ADR-0030 — neither is an acceptance criterion,
+  neither is the agent's to settle: credential validation in OR-1, and cart loss
+  on process death in OR-3.
+- **The session strategy.** Measured: nothing survives process death, so there is
+  no `storageState` analogue. The choice is login-per-test versus keeping the
+  process alive across tests. **This collides with OR-3** — if the harness keeps
+  the process alive to save logins, OR-3 can no longer observe what it claims to
+  observe. Resolve it before writing OR-3, not after.
+- **Tag routing.** The per-user Playwright project matrix has no equivalent.
+  Needs a design, not a translation.
