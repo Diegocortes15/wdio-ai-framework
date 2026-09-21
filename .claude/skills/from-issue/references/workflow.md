@@ -264,7 +264,7 @@ Apply [`references/test-template.md`](test-template.md). Also consult [`referenc
 - **Omit empty buckets entirely** — if no tests were classified into a bucket, don't emit its describe block at all
 - Within each bucket describe, tests appear in their Step 6 emission order
 
-Each `it(...)` title is behaviour prose. If `smoke: true`, append ` @smoke` to the end of the title — Mocha has no tag option, and `npm run test:smoke` greps titles. A record with `expectedFailure` renders as `itFails('<DEFECT-KEY>', '<title>', ...)` with the defect comment above it. This is the format defined in [`references/test-template.md`](test-template.md) "Rules".
+Each `it(...)` title is behaviour prose. If `smoke: true`, append ` @smoke` to the end of the title — Mocha has no tag option, and `npm run test:smoke` greps titles. A record with `expectedFailure` renders as `itFails('<DEFECT-KEY>', '<title>', ...)` with the defect comment above it — **but not on the first render.** Render it as a plain `it` first, run it in Step 10, and confirm from its run record that it fails **with the defect's failure**; only then switch it to `itFails`. The procedure is in `fix-loop.md`, section "The one case where the run applies it" — read that section now, even if the run will end green. A measurement or an inference is not a substitute for the run: `itFails` passes on any failure, and the plain run is the only thing that shows which failure it is. This is the format defined in [`references/test-template.md`](test-template.md) "Rules".
 
 Render to an in-memory string. Do NOT Write yet — Step 8 handles overwrite refusal first.
 

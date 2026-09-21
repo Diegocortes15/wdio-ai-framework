@@ -50,7 +50,7 @@ Each names the step that needs it, so a run loads what it uses rather than every
 - [`references/wdio-conventions.md`](references/wdio-conventions.md) — the WebdriverIO + Appium practices generated tests and Page Object additions must follow. **Steps 5 and 7**.
 - [`references/test-principles.md`](references/test-principles.md) — F.I.R.S.T. principles and the anti-pattern gallery. **Step 7**; the gallery is the part that is specific to this repo.
 - [`references/pr-description-template.md`](references/pr-description-template.md) — the PR body's structure and rules. **Step 12**, and skipped entirely on a `dry-run`.
-- [`references/fix-loop.md`](references/fix-loop.md) — the no-red-PR gate: diagnosis, retry budget, forbidden fixes. **Step 10.5 only — read nothing of it when a run is green.**
+- [`references/fix-loop.md`](references/fix-loop.md) — the no-red-PR gate: diagnosis, retry budget, forbidden fixes. **Step 10.5**, and its "one case where the run applies it" section at **Step 7** whenever a record has `expectedFailure`. Otherwise read nothing of it when a run is green.
 - [`references/tcms-sync.md`](references/tcms-sync.md) — the records artifact's shape. **Step 11.5**, and skipped on a `dry-run` or a `--from-file` run.
 
 ## Scripts
