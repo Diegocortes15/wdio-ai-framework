@@ -115,9 +115,9 @@ grep -rn "](\.\./\|](/\|](docs/\|](src/\|](tests/\|](data/" .claude/skills/
 - Tickets come from **Jira** through the Atlassian MCP — project **`OR`**. `gh` CLI for GitHub; no GitHub
   MCP server (ADR-0007, scoped by ADR-0011).
 - **PR titles follow Conventional Commits.** The repository squash-merges, so the title becomes the commit.
-- **CI does not run the suite** — no device yet. Its only job syncs the Qase catalogue when records change on
-  `main` (ADR-0041). Before opening a PR, run `npm run typecheck`, `npm run lint`, `npm run format:check`,
-  `npm run test:unit` and the affected specs locally, green. A PR is opened only on a green local run.
+- **CI never runs the suite** — no device yet. Two jobs, both deviceless: PR checks (`npm ci`, typecheck, lint,
+  format, unit tests) and the Qase catalogue sync when records change on `main` (ADR-0041). Run the affected
+  specs locally, green, before opening a PR — nothing else will. A PR is opened only on a green local run.
 - **Commit only when asked.**
 
 ## ADRs

@@ -386,8 +386,8 @@ measurement says are almost pure judgment — worked without being rewritten.
 
 ## 12. Scope decisions taken 2026-09-21
 
-- **CI: no test run for now** (2026-09-21: one job exists, the Qase catalogue sync,
-  which needs no device — ADR-0041). The suite runs local. Mobile CI needs an emulator, and
+- **CI: no test run for now** (2026-09-21: two deviceless jobs exist — PR checks
+  without the suite, added after a lockfile broke on merge, and the Qase catalogue sync, ADR-0041). The suite runs local. Mobile CI needs an emulator, and
   the system image here is arm64 while cheap Linux runners are x86 — a real
   decision, deferred. **BrowserStack is the intended direction** when it happens,
   not self-hosted runners. Do not build CI speculatively (see principle 1 below).
