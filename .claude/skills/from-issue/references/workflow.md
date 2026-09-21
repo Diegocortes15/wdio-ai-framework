@@ -1,6 +1,6 @@
 # from-issue Workflow
 
-The procedural workflow Claude follows when the `from-issue` skill is invoked. The source ticket is a **Jira** issue (project `SW`), read via the Atlassian MCP — see ADR-0011.
+The procedural workflow Claude follows when the `from-issue` skill is invoked. The source ticket is a **Jira** issue, read via the Atlassian MCP — see ADR-0011.
 
 ## Inputs
 
@@ -19,7 +19,7 @@ The procedural workflow Claude follows when the `from-issue` skill is invoked. T
 
 Many steps abort. From **Step 5 onward, every abort leaves files on disk** — that is where the
 run starts writing: a scaffolded Page Object, a generated spec, an in-place edit to a committed
-feature file, an appended user in `tests/users.ts`. ADR-0020 means no PR is opened. It does not
+feature file, members appended to an existing Page Object. ADR-0020 means no PR is opened. It does not
 mean nothing happened.
 
 **So every abort from Step 5 onward ends by naming what it left behind**, grouped the way
@@ -126,7 +126,7 @@ Capture: `<KEY>` (the issue key), `summary` (the title), and `description` (rend
 Tickets are authored many ways and at any quality (trainee → senior BA). **Normalize whatever the ticket contains — format- AND quality-agnostic** (per ADR-0012): a formal "As a / I want / so that" narrative, Given/When/Then scenarios, a bullet/numbered AC list, plain prose, structured fields, or a partial/mixed blob all reduce to the same internal AC records. Extract from the summary + description:
 
 - **Feature** (single-line slug) — drives `tests/<feature>/`. If not stated, infer it from the summary/subject (and record the inference as an assumption, below).
-- **Acceptance Criteria** — one behavior each, derived from whatever form the ticket used.
+- **Acceptance Criteria** — one behavior each, derived from whatever form the ticket used. **When the description carries a `Refined Acceptance Criteria` section** (written by `/refine-ticket`), that section is the requirement: use its criteria and their numbering, and treat any criteria above the divider as the reporter's draft that the refinement superseded. Name which set you used in `requirement_restated`.
 - **Notes** (optional) — context only.
 
 While normalizing, also capture (used by the PR's "What I understood", Step 7 / `pr-description-template.md`):
@@ -143,7 +143,7 @@ For each Acceptance Criterion, build an internal record:
 {
   id: 1,  // sequential
   text: "<normalized AC text>",
-  user: "<inferred saucedemo user, e.g., standard_user; default standard_user if unspecified>",
+  user: "<the account the AC names; if none, the one the ticket or login screen documents for the happy path — record it as an assumption>",
   worth_automating: true | false,
   rationale: "<LLM justification; required when worth_automating=false>"
 }
@@ -198,13 +198,14 @@ ls src/pages/checkout/<PageName>.ts 2>/dev/null
 ```
 
 - **Either path exists** → reuse the existing Page Object. Record a collision warning for the PR body. During render (Step 7 / Step 8.5), the Page Object may need changes to support the new tests:
-  - **Add** — a new test needs a locator/method the Page Object lacks → **append** it, following the composed-vs-primitive + `test.step` conventions in `scaffold-page-object/references/page-object-template.md`. Existing members are untouched. Record any selector that lands below the preference order (`[data-test]` → `getByRole` → text → CSS) as you write it — Step 13 reports it (ADR-0022). When the new members query many similar elements (cards/rows), choose parallel-array queries vs a discriminator component per `scaffold-page-object/references/component-detection.md` ("Parallel-array queries vs a discriminator component"). **Component-extraction judgment applies on augment, not just at page-scaffold:** if the new members form a **distinct sub-widget** — its own panel/menu/region with several locators + actions (e.g. a header burger menu) — prefer extracting a **nested component** (composed by the target, depth ≤ 2 per rule #11, like `CartBadge` under `Header`) over fattening the target into a multi-widget grab-bag. Apply `component-detection.md`'s "is this a component?" test to the new cluster. (SW-10/SW-11's burger menu accreted onto `Header` member-by-member before it was extracted into `BurgerMenu` — the per-ticket append never stepped back to see the emerging widget; this note is that step-back.)
+  - **Add** — a new test needs a locator/method the Page Object lacks → **append** it, following the `step` and locator conventions in [`wdio-conventions.md`](wdio-conventions.md). **Verify every new locator against a live page source dump before writing it** — count its matches on the screen it belongs to and on the screens a test arrives from; WebdriverIO acts on the first match silently, so an unverified locator can pass while reading the wrong element. Existing members are untouched. Record any selector that lands below the preference order (accessibility id → resource-id → `UiSelector` / predicate string → class chain) as you write it — Step 13 reports it (ADR-0022). When the new members query many similar elements (cards/rows), choose parallel-array queries vs a discriminator component per `scaffold-page-object/references/component-detection.md` ("Parallel-array queries vs a discriminator component"). **Component-extraction judgment applies on augment, not just at page-scaffold:** if the new members form a **distinct sub-widget** — its own panel/menu/region with several locators + actions (e.g. a header burger menu) — prefer extracting a **nested component** (composed by the target, depth ≤ 2 per rule #11, like `CartBadge` under `Header`) over fattening the target into a multi-widget grab-bag. Apply `component-detection.md`'s "is this a component?" test to the new cluster. (SW-10/SW-11's burger menu accreted onto `Header` member-by-member before it was extracted into `BurgerMenu` — the per-ticket append never stepped back to see the emerging widget; this note is that step-back.)
   - **Modify** — a new test needs an **existing** method to behave differently → modify it in place. Per ADR-0010, modifying a shared method can regress other specs; Step 10 runs the smoke set alongside the target spec, which is where a regression in a shared method shows up; the merge run's full suite is the broad net (ADR-0032).
   - **Irreconcilable** — if a required change would break the existing method's contract in a way you cannot reconcile, **abort**: _"augmenting <KEY> needs `<Method>` to change incompatibly; edit `<PageObject>` manually, then re-run."_ No PR.
 - **Neither path exists** → invoke `/scaffold-page-object` with inputs:
   - Page name: `<PageName>`
-  - URL: inferred from the AC text (e.g., AC mentions "cart page" → `https://www.saucedemo.com/cart.html`)
-  - storageState: `auth/standard.json` by default. Override only if ALL Step 4 AC records share the same non-standard user (the storageState is only used for the snapshot; tests pick their own user via tag→project mapping). The project that actually runs each test is wired in Step 6.5 — see [`references/harness.md`](harness.md).
+  - How to reach the screen: the navigation from the app's launch screen, inferred from the AC text (e.g. "the cart" → tap the header's cart button). A mobile screen has no URL.
+
+  **`/scaffold-page-object` has not been adapted to Appium page source yet.** Until it is, abort instead of invoking it: _"`<KEY>` needs a new Page Object (`<PageName>`), and /scaffold-page-object does not read Appium page source yet. Write the Page Object by hand, then re-run."_ No PR. Report it under Obstacles as a reference gap in `scaffold-page-object/references/workflow.md`.
 
   If `/scaffold-page-object` fails, abort with the subprocess error verbatim. No PR.
 
@@ -214,24 +215,24 @@ Group the `worth_automating=true` AC records into a set of tests. One test may c
 
 ```
 {
-  title: "<behavior-only description, e.g., 'remove single item from cart updates badge'>",
+  title: "<behavior-only description, e.g., 'adding a product shows a cart badge of 1'>",
   covers: [1, 3],  // AC IDs
-  user: "<saucedemo user>",
-  tags: ["<auth-tag>", "<user-tag-if-not-no-auth>"],
+  user: "<the account the test signs in as, or 'no-auth' when it never signs in>",
   bucket: "Positive" | "Negative" | "Edge",
-  smoke: true | false
+  smoke: true | false,
+  expectedFailure: "<DEFECT-KEY>" | null  // set only when the ticket records a confirmed, filed defect for this AC
 }
 ```
 
-Tag selection follows CLAUDE.md "Tag conventions" table. Title format follows [`references/test-template.md`](test-template.md) "Rules". Bucket assignment follows [`references/bucket-classification.md`](bucket-classification.md) — read it before classifying. The bucket lives on the test (not on the AC) because one test can cover multiple ACs; classify by the test's dominant behavior, using the ambiguity rules in bucket-classification.md as the tiebreaker.
+`@smoke` is the only tag, and it is appended to the title (see [`test-template.md`](test-template.md) "Rules"). Title format follows [`references/test-template.md`](test-template.md) "Rules". Bucket assignment follows [`references/bucket-classification.md`](bucket-classification.md) — read it before classifying. The bucket lives on the test (not on the AC) because one test can cover multiple ACs; classify by the test's dominant behavior, using the ambiguity rules in bucket-classification.md as the tiebreaker.
 
 **Read the existing `@smoke` set first.** One of the policy's criteria is relational — a test is *not* smoke when "a more critical version of the same error is already smoke" — and that cannot be evaluated without knowing what already carries the tag:
 
 ```bash
-npx playwright test --grep "@smoke" --list 2>/dev/null | grep "›" | grep -v "auth.setup" | sed 's/.*› //' | sort -u
+grep -rhoE "(it|itFails)\((['\"\`]).*@smoke" tests/ | sed -E "s/^(it|itFails)\(['\"\`]([A-Z][A-Z0-9]+-[0-9]+['\"\`], ['\"\`])?//" | sort -u
 ```
 
-Ignore the `authenticate as <user>` line if it appears: that is the auth-setup pseudo-test, not a smoke case. If the command fails for any reason, assign smoke without it and note in the PR body that the relational criterion went unchecked — do not guess at what is already tagged.
+WebdriverIO has no `--list`, so this reads the titles from the spec files; a smoke test's title ends in `@smoke`. If the command fails for any reason, assign smoke without it and note in the PR body that the relational criterion went unchecked — do not guess at what is already tagged.
 
 Smoke assignment then follows [`references/smoke-policy.md`](smoke-policy.md) — read it before classifying. Smoke status is orthogonal to bucket: a Negative test can be smoke (critical regression risk) and a Positive test can be NOT-smoke (peripheral happy path). The default per smoke-policy.md is `false` ("when in doubt, NOT smoke").
 
@@ -245,35 +246,31 @@ Data placement follows [`references/data-placement.md`](data-placement.md) — d
 
 **If `references/smoke-policy.md` is missing or unreadable**, abort with: _"`.claude/skills/from-issue/references/smoke-policy.md` not found. Re-install the skill or restore from git."_ Do not fall back to inline rules.
 
-### 6.5. Resolve & grow the harness
+### 6.5. Resolve the session each test starts from
 
-Per [`references/harness.md`](harness.md) (read it before this step). From the Step 6 test records, compute the **required user set**: `@no-auth` tests need no user; user-agnostic tests (`@all-users`/`@standard`) need only `standard`; a test targeting a specific user needs that user.
+Nothing to grow. Every test starts from a fresh app process, logged out (ADR-0040), so there is no per-user project and no stored session to wire — see [`references/harness.md`](harness.md). A test whose AC needs a signed-in user logs in through the login Page Object as its first action.
 
-For each required user **not** wired in `tests/users.ts` `AUTH_USERS`, **append it autonomously** — no mid-run question, no recovering config from git history. The data-driven `playwright.config.ts` + `tests/auth.setup.ts` derive the project + storageState from the array. If `tests/users.ts` / the data-driven config / `auth.setup.ts` don't exist yet, create all three from the canonical shapes in `harness.md`, seeded with the required users.
-
-**Guardrail (ADR-0004):** never pre-create unused users; never add `<browser>-<non-standard>` projects. Cross-browser stays out.
-
-Record a side-effect note for the PR body: `⚙️ Harness grew: wired the <user> project + auth setup (first ticket needing <user>). Reviewer: confirm.`
+Check one thing: the account each test signs in as must be one the ticket names or the login screen documents. If a test needs an account nobody has named, record it as an assumption for the PR body — do not invent credentials.
 
 ### 7. Render test file
 
-Apply [`references/test-template.md`](test-template.md). Also consult [`references/test-principles.md`](test-principles.md) (F.I.R.S.T. principles), [`references/playwright-conventions.md`](playwright-conventions.md) (Playwright best practices), and [`references/data-placement.md`](data-placement.md) (inline vs. externalized test data) to ensure the rendered tests comply with project quality standards:
+Apply [`references/test-template.md`](test-template.md). Also consult [`references/test-principles.md`](test-principles.md) (F.I.R.S.T. principles), [`references/wdio-conventions.md`](wdio-conventions.md) (WebdriverIO + Appium practices), and [`references/data-placement.md`](data-placement.md) (inline vs. externalized test data) to ensure the rendered tests comply with project quality standards:
 
 - Top-of-file 5-line provenance block (substitute today's date, Jira key, URL, summary)
-- Imports: `@fixtures/test` (always), `@utils/env` (when password needed)
-- One `test.describe('<feature> — <context-label>', { tag: '<routing-tag>' }, ...)` per user-context (per ADR-0015) — the routing tag lives in the **`{ tag }` option, not the title** (see test-template.md for the context-label mapping). Multiple contexts in one feature = sibling tagged describes in the same file.
-- Inside each context describe, group tests by their `bucket` field into up to three nested `test.describe('Positive' | 'Negative' | 'Edge', ...)` blocks
+- Imports: each Page Object the spec uses (default export, a singleton); `itFails` from `@utils/expected-failure` when a record has `expectedFailure`
+- One `describe('<feature> — no auth', ...)` per feature (see test-template.md)
+- Inside it, group tests by their `bucket` field into up to three nested `describe('Positive' | 'Negative' | 'Edge', ...)` blocks
 - Bucket describes appear in fixed order: **Positive → Negative → Edge** (even if Negative tests outnumber Positive)
 - **Omit empty buckets entirely** — if no tests were classified into a bucket, don't emit its describe block at all
 - Within each bucket describe, tests appear in their Step 6 emission order
 
-Each `test(...)` title is **pure prose** (behavior-only) — NO tags in the title. If `smoke: true`, attach `{ tag: '@smoke' }` as the test's options arg: `test('<behavior>', { tag: '@smoke' }, async (...) => {...})`; if `smoke: false`, omit the options arg entirely. The routing tag is NOT repeated on the test — it's on the context describe. This is the format defined in [`references/test-template.md`](test-template.md) "Rules".
+Each `it(...)` title is behaviour prose. If `smoke: true`, append ` @smoke` to the end of the title — Mocha has no tag option, and `npm run test:smoke` greps titles. A record with `expectedFailure` renders as `itFails('<DEFECT-KEY>', '<title>', ...)` with the defect comment above it. This is the format defined in [`references/test-template.md`](test-template.md) "Rules".
 
 Render to an in-memory string. Do NOT Write yet — Step 8 handles overwrite refusal first.
 
 ### 8. Write test file
 
-The test file is named after the **Feature**, not the issue title. The framework targets a single app (saucedemo), so issue-title prefixes like `[SDA]` and suffixes like "Login in Saucedemo App" are redundant noise in a filename.
+The test file is named after the **Feature**, not the issue title. The framework targets a single app, so issue-title prefixes like `[OR][QA]` are redundant noise in a filename.
 
 ```
 tests/<feature>/<feature>.spec.ts
@@ -283,7 +280,7 @@ Where `<feature>` is the snake_case Feature field. Example: Feature `login` → 
 
 #### Collision handling
 
-Resolve the target path **and the write mode**. Read the contributor set of `tests/<feature>/<feature>.spec.ts` if it exists — that is the origin key on line 1 (`// Generated by /from-issue ... from Jira <KEY>.`) **plus** every key on the `// Augmented by:` line (if present). Then:
+Resolve the target path **and the write mode**. Read the contributor set of `tests/<feature>/<feature>.spec.ts` if it exists — that is the origin key on line 1 (`// Generated by /from-issue ... from Jira <KEY>.`), if the file was generated, **plus** every key on the `// Augmented by:` line (if present). A hand-written file has no origin key; its contributor set is the `Augmented by:` keys alone, and an empty set means AUGMENT. Then:
 
 | Condition                                              | Mode                                                                                                                                                                               |
 | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -300,26 +297,23 @@ The new test title format, bucket structure, and the header block are unchanged 
 
 Skip this step entirely in CREATE-NEW mode. In AUGMENT mode, edit `<testfile>` in place with targeted `Edit` calls — never regenerate the whole file (that would destroy manual edits, per ADR-0010).
 
-**Resolve the context describe by tag (per ADR-0015).** The file holds one `test.describe('<feature> — <context-label>', { tag: '<routing-tag>' }, ...)` per user-context. Find the sibling describe whose `{ tag }` equals the new tests' routing tag:
+**Resolve the feature describe by its title.** The file holds one `describe('<feature> — no auth', ...)`. Insert the new tests into its bucket blocks (the bucket logic below operates within it).
 
-- **Match found** → insert the new tests into THAT describe's bucket blocks (the bucket logic below operates within it).
-- **No match** → add a NEW sibling `test.describe('<feature> — <context-label>', { tag: '<routing-tag>' }, ...)` (with its own bucket children) after the existing context describes. This is the multi-user case (e.g. file has `@problem`, new tests are `@standard`) — no abort, no `--new-file` needed.
-
-**Pre-check — structure recognizable.** If the file has no locatable outer `test.describe` or its bucket describes can't be found (hand-restructured beyond recognition), **abort**: _"couldn't locate insertion point in `<testfile>`; add the tests manually or re-run with `--new-file`."_
+**Pre-check — structure recognizable.** If the file has no locatable outer `describe` or its bucket describes can't be found (hand-restructured beyond recognition), **abort**: _"couldn't locate insertion point in `<testfile>`; add the tests manually or re-run with `--new-file`."_
 
 For each new test record (already bucket-classified in Step 6):
 
-1. **Duplicate guard — scoped to the resolved context describe, never the whole file.** Normalize the record's title (lowercase, collapse whitespace) and compare it against the normalized titles **inside the context describe resolved above**. On a clear match, **skip** the record and note: `⏭️ skipped "<title>" — already covered by "<existing test>" in <context-label>`. When unsure, include it and let the reviewer decide (matches [`qa-analysis.md`](qa-analysis.md)'s conservative "default NOT skip").
+1. **Duplicate guard — by behaviour, not by string.** Compare what the record asserts against what each existing test in the resolved describe asserts: same action, same input, same expected outcome. A hand-written test rarely shares the generated title word for word, so an exact-title comparison misses the duplicate it exists to catch. On a clear match, **skip** the record and note: `⏭️ skipped "<title>" — already covered by "<existing test>"`, naming both so the reviewer can check the claim. When unsure, include it and let the reviewer decide (matches [`qa-analysis.md`](qa-analysis.md)'s conservative "default NOT skip").
 
-   **An identical title in a _different_ context describe is not a duplicate — it is the multi-user case, and it must be inserted.** One file holds one describe per user-context, so `every product price is formatted with a leading dollar sign` under `@standard` and the same sentence under `@problem` are two different tests: same assertion, different user, and only one of them has coverage. A file-scoped comparison skips the second, reports `⏭️ already covered`, and hands back a PR claiming coverage that does not exist — the failure ADR-0020 exists to prevent, arriving as a green run rather than a red one.
+   **The same assertion for a different account is not a duplicate.** `the cart badge counts units` for one user and for another are two tests with the same sentence; only one of them has coverage until both exist. Skipping the second hands back a PR claiming coverage that does not exist — the failure ADR-0020 exists to prevent, arriving as a green run rather than a red one.
 
-   Do **not** strip tags while normalizing. Tags have not lived in titles since ADR-0015 moved them to the `{ tag }` option, so there is nothing to strip; an instruction to strip them can only mislead a reader into thinking title-embedded tags are still a thing.
+   Ignore a trailing ` @smoke` when comparing: it is a tag, not behaviour.
 2. **Locate the bucket** _within the resolved context describe_ (above). Find the `test.describe('Positive' | 'Negative' | 'Edge', () => { ... })` block matching the record's `bucket`.
    - Block exists → `Edit` to insert the new `test(...)` at the end of that block (before its closing `});`).
    - Block absent → insert a new bucket describe in the fixed **Positive → Negative → Edge** order, positioned correctly relative to existing buckets.
-3. **Render the test body** exactly as Step 7 would (no spec-level `test.step`; steps live in Page Object methods per [`playwright-conventions.md`](playwright-conventions.md)).
+3. **Render the test body** exactly as Step 7 would (no spec-level `step`; steps live in Page Object methods per [`wdio-conventions.md`](wdio-conventions.md)).
 
-**Update the header.** Append this issue to the `// Augmented by:` line as `<KEY> (YYYY-MM-DD)` (comma-separated). If the line doesn't exist yet, add it directly below the `// Title:` line:
+**Update the header.** Append this issue to the `// Augmented by:` line as `<KEY> (YYYY-MM-DD)` (comma-separated). If the line doesn't exist yet, add it directly below the `// Title:` line — or, in a hand-written file with no provenance block, on line 1 (see test-template.md):
 
 ```ts
 // Augmented by: <KEY> (YYYY-MM-DD)
@@ -336,8 +330,8 @@ modified — the spec, plus any Page Object from Step 5 and any data file from S
 .claude/skills/from-issue/scripts/typecheck-spec.sh <testfile> [src/pages/<PageName>.ts ...]
 ```
 
-The script writes a throwaway tsconfig that extends the project's own (so `@fixtures/test`
-and `@pages/*` resolve), typechecks through it, and always cleans up. It resolves `tsc` from
+The script writes a throwaway tsconfig that extends the project's own (so `@pages/*` and
+`@utils/*` resolve), typechecks through it, and always cleans up. It resolves `tsc` from
 `node_modules/.bin` and refuses to run otherwise — never `npx tsc`, which with `node_modules`
 absent silently fetches `tsc@2.0.4`, a deprecated squatter package that is not the TypeScript
 compiler and would hand back a PASS the run never earned.
@@ -361,11 +355,13 @@ compiler and would hand back a PASS the run never earned.
 **Run the smoke set, then the target spec.** Two commands, in that order (ADR-0032):
 
 ```bash
-npx playwright test --grep "@smoke"
-npx playwright test <testfile>
+npm run test:smoke
+npx wdio run ./wdio.android.conf.ts --spec <testfile>
 ```
 
-Smoke first because it is ~8 tests and a few seconds, and a critical-path regression should
+The emulator must be running first (`npm run emulator`). If either command fails before a single test starts — no device, Appium not up, a system dialog over the app — that is an environment failure, not a test result: report it and stop; it does not consume a fix attempt.
+
+Smoke first because it is a handful of tests, and a critical-path regression should
 stop the run before anything slower. Then the spec this run generated or augmented.
 
 **Do not compute an "affected" set and do not run the whole suite.** Both were tried and both
@@ -377,10 +373,9 @@ run's job, not this step's.
 Record in the PR's Verification section that smoke plus the target spec ran, with per-test
 PASS/FAIL for both.
 
-**Never pass `--reporter=...` here.** The flag *replaces* the reporter list from
-`playwright.config.ts`, which silently drops `ObservationsReporter` — the run would produce
-no `.observations/<feature>.json` and Step 11 would stage nothing (ADR-0021). The config
-already includes `list`, so console output is unchanged without the flag.
+Each run writes one record per test under `test-results/steps/` — title, outcome, the named
+steps and the error. Step 11.5 reads the step titles from there; keep the target-spec run's
+records until then.
 
 Capture per-test PASS/FAIL output. Record one line per test for the PR body's Verification section:
 
@@ -422,30 +417,12 @@ git add <testfile>
 #   git add src/pages/checkout/<PageName>.ts
 # If Step 7 externalized data per data-placement.md, also stage the data file(s) + loader:
 #   git add data/scenarios/<feature>/<name>.json data/shared/<name>.json data/fixtures.ts data/types.ts
-# Runtime observations (ADR-0021): DO NOT stage .observations/observations.json.
-#
-# This instruction used to say to stage it. It is reversed because ADR-0032 narrowed Step 10 to
-# smoke plus the target spec, which makes EVERY run a partial run — and ADR-0029 records that a
-# partial run writes false `absentSince` marks, because a signature is marked absent when the
-# run exercised every feature in its `seenIn` and a narrow run did not exercise them at all.
-# Staging it writes "not seen since <today>" into the record on evidence the run did not earn.
-#
-# Two consecutive runs (SW-20, SW-21) hit this and both resolved it by judgment, which is the
-# signal that the instruction was wrong rather than the runs.
-#
-# So: discard the change, and report the real entries in the PR body instead — render them with
-# `npm run observations` and describe any NEW signature in prose. A full `npm test` on main
-# regenerates the index correctly, which is where that file's updates belong.
-#
-# If a new signature matters enough to be recorded rather than described, say so in the PR body
-# and let the reviewer stage it deliberately. Do not stage it as a side effect of a partial run.
-# If Step 6.5 grew the harness (per harness.md), also stage the changed source of truth
-# (and, on first-time creation, the config + auth setup):
-#   git add tests/users.ts
-#   git add playwright.config.ts tests/auth.setup.ts   # first-time creation only
+# If Step 5 added members to an existing Page Object or Component, stage it too:
+#   git add src/pages/<PageName>.ts src/components/<Component>.ts
+# Never stage test-results/ — it is a local run record, and gitignored.
 git commit \
   -m "feat(<feature>): automate <KEY> <feature> scenarios" \
-  -m "<body: 1–3 sentences — coverage added (N tests across buckets), the scenarios/ACs covered, and any scaffold/side-effects (new Page Object, fixture registration, externalized data, augment)>" \
+  -m "<body: 1–3 sentences — coverage added (N tests across buckets), the scenarios/ACs covered, and any scaffold/side-effects (new or extended Page Object, externalized data, augment)>" \
   -m "Refs: <KEY>" \
   -m "Co-Authored-By: Claude <noreply@anthropic.com>"
 git push -u origin <KEY>-<feature>
@@ -459,7 +436,7 @@ If `git push` fails (no remote, no auth), abort with the git error verbatim. The
 
 ### 11.5. Write the TCMS records artifact (Qase, at-merge model)
 
-**Skip** if `dry-run` **or `--from-file`** (ADR-0026 — no ticket, so no catalogue entry). Per [`references/tcms-sync.md`](tcms-sync.md): write the Step 6 semantic model to **`.tcms/records/<feature>.json`** — keyed by **feature, not ticket**: **append** to the existing feature file when one exists (Step 1.5 guarantees you branched from a base that includes any merged sibling work), create it only if absent. One object per generated test: `title`, `acText`, `user`, `tags`, `bucket`, `feature`, `contextLabel`, plus a **per-record `jira` array** (`[{ "key": "<KEY>", "url": "…/browse/<KEY>" }]`) — there is **no file-level `meta` block** (a feature file legitimately spans tickets; see [`tcms-sync.md`](tcms-sync.md) for the exact shape). `git add` it with the rest of the change (Step 11). This does **NOT** touch Qase. The authoritative Qase create/update/archive runs **at merge** in CI (`npm run tcms:sync`, see ADR-0017), so a rejected PR never mutates Qase. No `QASE_*` is needed at PR time.
+**Skip** if `dry-run` **or `--from-file`** (ADR-0026 — no ticket, so no catalogue entry). Per [`references/tcms-sync.md`](tcms-sync.md): write the Step 6 semantic model to **`.tcms/records/<feature>.json`** — keyed by **feature, not ticket**: **append** to the existing feature file when one exists (Step 1.5 guarantees you branched from a base that includes any merged sibling work), create it only if absent. One object per generated test: `title`, `acText`, `user`, `tags`, `bucket`, `feature`, `contextLabel`, a **per-record `jira` array** (`[{ "key": "<KEY>", "url": "…/browse/<KEY>" }]`), the test's **`steps`** — copied from its run record under `test-results/steps/`, never invented — and `expectedFailure` when the test uses `itFails`. There is **no file-level `meta` block** (a feature file legitimately spans tickets; see [`tcms-sync.md`](tcms-sync.md) for the exact shape). `git add` it with the rest of the change (Step 11). This does **NOT** touch Qase. The authoritative Qase create/update/remove runs in CI when records change on `main` (`npm run tcms:sync`, see ADR-0041), so a rejected PR never mutates Qase. No `QASE_*` is needed at PR time.
 
 ### 12. Open PR
 
@@ -515,8 +492,8 @@ agent learns to drop, and the empty state only means something because it cannot
 
 It carries exactly three things, and nothing that already has a channel elsewhere:
 
-1. **Selector downgrades.** The preference order is `[data-test]` → `getByRole` → text →
-   CSS, and only XPath fails lint. So when you write a locator below the highest level
+1. **Selector downgrades.** The preference order is accessibility id → resource-id →
+   `UiSelector` / predicate string → class chain, and only XPath fails lint. So when you write a locator below the highest level
    *available on the page*, nothing catches it but this line. Name the element, the level
    available, the level you used, and why. A stable unique id is a perfectly good locator —
    the point is not to apologise for it, it is that the reviewer learns you looked.

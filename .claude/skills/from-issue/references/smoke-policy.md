@@ -9,7 +9,7 @@ The `/from-issue` skill uses this doc to decide which generated tests get the `@
 - **Cover critical user journeys** — the flows that, if broken, render the application unusable
 - **Stay tight** — small enough to run in 1-2 minutes; meant for fast feedback on every push/PR
 - **Be stable** — minimal flakiness so failures signal real regressions, not test brittleness
-- **Run via `npm run test:smoke`** — which uses `playwright test --grep "@smoke"`
+- **Run via `npm run test:smoke`** — which selects tests whose title contains `@smoke`
 
 A test that's "happy path" but peripheral (e.g., sort by price) is NOT smoke. A test that's "negative" but covers critical regression risk (e.g., unauthenticated cart access is properly blocked) IS smoke. Bucket (Positive/Negative/Edge) is orthogonal to smoke status.
 

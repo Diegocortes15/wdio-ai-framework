@@ -1,12 +1,12 @@
 ---
 name: from-issue
-description: Generate Playwright tests from a Jira ticket (read via the Atlassian MCP), composing /scaffold-page-object when a target Page Object doesn't yet exist, and open a GitHub PR with the generated tests for review.
-allowed-tools: Bash(gh:*) Bash(git:*) Bash(npx:*) Bash(rm:*) Bash(mkdir:*) Bash(ls:*) Bash(.claude/skills/from-issue/scripts/typecheck-spec.sh:*) Read Glob Grep Write mcp__atlassian__getAccessibleAtlassianResources mcp__atlassian__getJiraIssue
+description: Generate WebdriverIO + Appium tests from a Jira ticket (read via the Atlassian MCP), composing /scaffold-page-object when a target Page Object doesn't yet exist, and open a GitHub PR with the generated tests for review.
+allowed-tools: Bash(gh:*) Bash(git:*) Bash(npx:*) Bash(npm:*) Bash(rm:*) Bash(mkdir:*) Bash(ls:*) Bash(.claude/skills/from-issue/scripts/typecheck-spec.sh:*) Read Glob Grep Write mcp__atlassian__getAccessibleAtlassianResources mcp__atlassian__getJiraIssue
 ---
 
 # from-issue
 
-Given a Jira issue key (e.g. `SW-123`), this skill reads the ticket via the Atlassian MCP, normalizes its requirement in whatever form it was written (narrative, Given/When/Then, bullet ACs, prose, or mixed), generates a set of Playwright tests, runs them locally, and opens a GitHub PR with a structured description. The PR is the review gate, and the GitHub-for-Jira app auto-links it onto the ticket. See ADR-0011.
+Given a Jira issue key (e.g. `SW-123`), this skill reads the ticket via the Atlassian MCP, normalizes its requirement in whatever form it was written (narrative, Given/When/Then, bullet ACs, prose, or mixed), generates a set of WebdriverIO + Appium tests, runs them locally, and opens a GitHub PR with a structured description. The PR is the review gate, and the GitHub-for-Jira app auto-links it onto the ticket. See ADR-0011.
 
 **A run never opens a red PR** (ADR-0020). If the typecheck or a test fails, the skill diagnoses and retries up to 3 times; if it still fails — or if the failure means the **app** contradicts an AC rather than the generated code being wrong — it reports what it found and opens nothing.
 
@@ -44,10 +44,10 @@ Each names the step that needs it, so a run loads what it uses rather than every
 - [`references/bucket-classification.md`](references/bucket-classification.md) — Positive/Negative/Edge definitions + worked examples. **Step 6**, mandatory before classifying.
 - [`references/smoke-policy.md`](references/smoke-policy.md) — `@smoke` selection criteria + worked examples. **Step 6**, mandatory before classifying.
 - [`references/qa-analysis.md`](references/qa-analysis.md) — senior QA judgment: when to merge, split or skip ACs. **Step 4**, before producing test records.
-- [`references/harness.md`](references/harness.md) — data-driven config and autonomous harness growth (ADR-0014). **Step 6.5**, before touching `AUTH_USERS`.
+- [`references/harness.md`](references/harness.md) — why there is no per-user harness to grow on mobile. **Step 6.5**.
 - [`references/data-placement.md`](references/data-placement.md) — inline vs. externalized (`data/`) test data. **Step 6**; most runs keep data inline and never need more than the decision rule.
 - [`references/test-template.md`](references/test-template.md) — canonical test-file template. **Step 7**, when rendering.
-- [`references/playwright-conventions.md`](references/playwright-conventions.md) — the Playwright practices generated tests must follow. **Step 7**, when rendering.
+- [`references/wdio-conventions.md`](references/wdio-conventions.md) — the WebdriverIO + Appium practices generated tests and Page Object additions must follow. **Steps 5 and 7**.
 - [`references/test-principles.md`](references/test-principles.md) — F.I.R.S.T. principles and the anti-pattern gallery. **Step 7**; the gallery is the part that is specific to this repo.
 - [`references/pr-description-template.md`](references/pr-description-template.md) — the PR body's structure and rules. **Step 12**, and skipped entirely on a `dry-run`.
 - [`references/fix-loop.md`](references/fix-loop.md) — the no-red-PR gate: diagnosis, retry budget, forbidden fixes. **Step 10.5 only — read nothing of it when a run is green.**

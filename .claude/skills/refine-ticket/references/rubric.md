@@ -9,7 +9,9 @@ Score the **whole ticket** (Feature + every AC). Treat each AC independently for
 1. **Feature** — a single snake_case slug is present (e.g. `Feature: login`). Drives `tests/<feature>/`. Gap → infer from the summary/subject and confirm with the user.
 2. **One behavior per AC** — no compound "X and Y". Gap → split into separate ACs.
 3. **Real user role** — each AC names the actor (e.g. `standard_user`, `locked_out_user`). Validate against `data/` users / `docs/app/users.md` when present. Gap → ask which user, or default and record the assumption.
-4. **Explicit pass/fail signal** — each AC has an observable, deterministic outcome: a URL, an exact message string, or an element state. No "works", "looks good", "is correct". Gap → ask for the concrete signal (the user, the ticket, or a doc supplies it). Don't harvest selectors/strings from a running app — `/from-issue` confirms those at generation time.
+4. **Explicit pass/fail signal** — each AC has an observable, deterministic outcome: a screen reached, an exact message string, or an element state. No "works", "looks good", "is correct". Gap → ask for the concrete signal (the user, the ticket, or a doc supplies it). Don't harvest selectors/strings from a running app — `/from-issue` confirms those at generation time.
+
+   **Prefer a signal that appears over one that doesn't.** "The app shall not open the catalog" is a valid AC, but its test can only watch for a while and conclude nothing came — slower, and easy to write so it passes vacuously. When the product defines what *should* happen instead (an error message, a field highlighted), ask for it and put it in the AC. When nobody has defined it, keep the absence and do not invent a message: say in the assumptions that the signal is an absence, so `/from-issue` knows to bound the wait.
 
    **Weigh the source.** `docs/app/` carries a `Verified by:` field naming the test that proves each claim, and it is allowed to read `Verified by: nothing`. When the signal comes from an unverified claim, use it — it is still the best available ground truth — but **record it as an assumption and surface it at the approval gate**, so the person approving knows they are accepting a documented belief rather than a tested fact. `/from-issue` will confirm it against the application at generation time, and the ADR-0020 gate catches it if the doc was wrong. (Real case: SW-15's lockout error string came from an unverified line in `users.md`, was flagged as such, and turned out to be correct — which is how that line stopped being unverified.)
 5. **Location** — each AC says _where_ it happens ("on the inventory page", "in the cart"), mapping to an existing or scaffoldable Page Object. Gap → ask which surface.
@@ -33,6 +35,11 @@ Score the **whole ticket** (Feature + every AC). Treat each AC independently for
     while asserting the bug is correct, and nothing ever revisits it. This happened: SW-16 was
     first written as characterization of a broken sort, which would have locked in the defect as
     expected behaviour; rewritten as intended behaviour, it correctly blocked and produced SW-17.
+
+    **When a person has already confirmed the contradiction and filed the defect**, say so on
+    the AC and name the defect key ("AC 6 lands as an expected failure tied to OR-4"). That
+    sentence is the approval `/from-issue` needs to lock the test to the defect instead of
+    stopping the run — without it, the run blocks and reports, as it should.
 
 ## EARS — the shape an AC takes
 

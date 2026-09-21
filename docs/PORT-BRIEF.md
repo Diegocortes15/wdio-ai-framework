@@ -386,15 +386,16 @@ measurement says are almost pure judgment — worked without being rewritten.
 
 ## 12. Scope decisions taken 2026-09-21
 
-- **CI: none for now.** Everything runs local. Mobile CI needs an emulator, and
+- **CI: no test run for now** (2026-09-21: one job exists, the Qase catalogue sync,
+  which needs no device — ADR-0041). The suite runs local. Mobile CI needs an emulator, and
   the system image here is arm64 while cheap Linux runners are x86 — a real
   decision, deferred. **BrowserStack is the intended direction** when it happens,
   not self-hosted runners. Do not build CI speculatively (see principle 1 below).
-- **TCMS / Qase: out of scope for now.** The web repo mirrors cases to Qase; this
-  repo does not, and will not until the thesis is answered. It adds surface and
-  contributes nothing to the question being asked. When it does come: Diego will
-  create a **separate Qase project for mobile**, expected to be **shared between
-  Android and iOS** rather than one per platform.
+- **TCMS / Qase: in scope, catalogue only** (changed 2026-09-21; this line used
+  to say "out of scope until the thesis is answered"). Diego created the mobile
+  Qase project `ORSAUCE`, intended to be **shared between Android and iOS**. With
+  no CI run of the suite, the catalogue syncs from the committed records alone and
+  run results are not mirrored — ADR-0041.
 - **Tickets:** Diego reviews OR-1/2/3 and runs `/refine-ticket` on them himself.
   Treat their acceptance criteria as draft until he has.
 

@@ -1,56 +1,32 @@
-# Harness resolution & growth
+# Harness — the session each test starts from
 
-How `/from-issue` resolves and **grows** the authenticated-test harness (the Playwright project matrix + auth setup) when a ticket needs a user whose project isn't wired yet. Per ADR-0014. The harness is **data-driven and demand-driven**: autonomous, no mid-run questions, no recovering old config from git history.
+On the web this file described a data-driven Playwright project matrix: one pre-authenticated
+project per user, grown on demand. **Mobile has no equivalent, and nothing to grow.**
 
-## Single source of truth — `tests/users.ts`
+## Why
 
-```ts
-// Single source of truth for the authenticated projects + auth setup.
-// /from-issue appends a user here (and nowhere else) the first time a ticket
-// needs that user's authenticated page (ADR-0014). Grows one user at
-// a time — do NOT pre-populate unused users (ADR-0004).
-export const AUTH_USERS = ['standard'] as const;
-```
+A web session is a cookie or a token, so it can be captured once and injected into every test
+(`storageState`). A mobile app's session lives in the app — in memory, or in its private storage —
+and there is no supported way to hand a test a ready-made one. Measured on the reference app:
+session and cart are held in memory only, and neither survives the process being killed.
 
-`playwright.config.ts` and `tests/auth.setup.ts` both derive from `AUTH_USERS`. Adding a user is a **one-line append** — nothing else changes.
+## What this repository does instead
 
-## Canonical config shape
+- **Every test starts from a fresh app process.** A Mocha root hook terminates and relaunches the
+  app before each test (ADR-0040). The test begins on the launch screen, logged out, with nothing
+  in memory.
+- **A test that needs a signed-in user logs in as its first action**, through the login Page
+  Object. That login is setup, not the subject, and it costs a few seconds of UI.
+- **There are no routing tags.** Nothing routes a test to a user-specific project because none
+  exist. `@smoke` is the only tag.
 
-```ts
-import { AUTH_USERS } from './tests/users';
-// projects: setup, no-auth, then one chromium project per user:
-//   ...AUTH_USERS.map((user) => ({
-//     name: user,
-//     testIgnore: /.*\.setup\.ts/,
-//     grep: new RegExp(`@all-users|@${user}`),
-//     dependencies: ['setup'],
-//     use: { ...devices['Desktop Chrome'], storageState: `auth/${user}.json` },
-//   }))
-```
+## When a ticket needs a user nobody has named
 
-`tests/auth.setup.ts` loops `AUTH_USERS`, logging each `<user>_user` in and saving `auth/<user>.json`.
+Use an account the ticket names or the login screen documents. If there is none, do not invent
+credentials: record it as an assumption for the PR body, and let the reviewer supply one.
 
-## The growth rule (Step 6.5)
+## When this stops being true
 
-After Step 6 assigns each test a `user` + tags, compute the **required user set**:
-
-- `@no-auth` tests → no user.
-- user-agnostic tests (`@all-users`, `@standard`) → require only `standard`.
-- a test that targets a specific user (e.g. an AC about `problem_user`'s broken images → `@problem`) → requires that user.
-
-For each required user **not** already in `AUTH_USERS`, **append it.** Then:
-
-- **First-time creation** (fresh/blank-slate repo with no `tests/users.ts` / data-driven config / `auth.setup.ts`): create all three from the canonical shapes above, seeded with the required users (always include `standard` once any auth test exists).
-- **Existing harness**: edit only `tests/users.ts` (append the user) — the config and auth setup already derive.
-
-Record a side-effect note for the PR (Step 12 / `pr-description-template.md`):
-`⚙️ Harness grew: wired the <user> project + auth setup (first ticket needing <user>). Reviewer: confirm.`
-
-## Guardrail (ADR-0004)
-
-- **Never** pre-create users no test targets.
-- **Never** add `<browser>-<non-standard>` projects (`firefox-problem`, `webkit-error`, …). Cross-browser is standard-only smoke and stays **out** of `/from-issue`'s growth — it's a separate ADR-0004 decision. `@sort-functional` is **not** a routing tag and must never be emitted as one: no project greps it, so those tests would run in zero projects and the run would report green having executed nothing.
-
-## Staging
-
-Stage `tests/users.ts` (and, on first-time creation, `playwright.config.ts` + `tests/auth.setup.ts`) in the Step 11 commit alongside the spec + Page Object.
+If the application gains a way to establish a session without the UI — a deep link that signs in,
+a test-only activity, a backdoor — that is the equivalent of `storageState`, and this file and
+ADR-0040 are where it gets decided.

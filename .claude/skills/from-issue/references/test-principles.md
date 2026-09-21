@@ -10,9 +10,9 @@ F.I.R.S.T. = **F**ast, **I**solated, **R**epeatable, **S**elf-validating, **T**i
 
 A test should run in seconds, not minutes. Target: <5 seconds per test for UI-driven scenarios; <1 second for unit-style.
 
-- Favor API setup over UI clicks when verifying non-UI behavior (e.g., set storageState rather than clicking through login for every test)
+- Favor a state shortcut (a deep link, a test activity) over UI clicks for setup that is not the subject — when the app offers one. Many mobile apps offer none; then setup goes through the UI and costs what it costs
 - Avoid waiting for animations or network delays unnecessarily
-- Use Playwright's auto-waiting assertions (no `waitForTimeout`)
+- Use auto-waiting assertions (no `browser.pause()`, no fixed sleeps)
 
 ### Isolated
 
@@ -21,7 +21,7 @@ Each test creates its own state. No test depends on another test's side effects.
 - Use `beforeEach` not `beforeAll` to reset state per test
 - Don't share mutable fixtures across tests
 - Tests must pass in any order; tests must pass when run alone
-- The Playwright fixture pattern (`async ({ loginPage }) => ...`) inherently gives each test a fresh page
+- A root hook relaunches the app before every test, so each test starts on a fresh process (see `wdio-conventions.md` "Test isolation")
 
 ### Repeatable
 
@@ -49,27 +49,25 @@ Tests are written close in time to the code change they verify.
 
 ## Anti-pattern gallery
 
-### Anti-Fast: UI login for every test
+### Anti-Fast: logging in when the behaviour does not need a session
 
 ```ts
-// BAD: every test logs in via UI (~3s each, 50 tests = 2.5 minutes wasted)
-test('@standard add product', async ({ page }) => {
-  await page.goto('/');
-  await page.fill('[data-test=username]', 'standard_user');
-  await page.fill('[data-test=password]', 'secret_sauce');
-  await page.click('[data-test=login-button]');
-  await page.click('[data-test=add-to-cart-backpack]');
+// BAD: the cart works logged out, so this login is ~5 s spent on nothing the AC asks about
+it('adding a product shows a cart badge of 1', async () => {
+  await LoginPage.open();
+  await LoginPage.loginAs('bod@example.com', '10203040');
+  await CatalogPage.openProduct('Sauce Labs Backpack');
+  // ...
 });
 ```
 
-Rewrite: use the `@standard` Playwright project's storageState (login happens once in `auth.setup.ts`, all tests start logged in):
+Rewrite: log in only when the acceptance criterion needs a signed-in user. Check what the app actually requires before adding a login as setup — measured on the reference app, adding to the cart works logged out, and a UI login costs ~5 s per test.
 
 ```ts
-// GOOD: project supplies the session, test starts on InventoryPage
-test('@standard add product', async ({ inventoryPage }) => {
-  await inventoryPage.goto();
-  await inventoryPage.addProductToCart('Sauce Labs Backpack');
-  expect(await inventoryPage.header.cartBadge.getCount()).toBe(1);
+// GOOD: starts where the reset leaves it, logged out on the catalog
+it('adding a product shows a cart badge of 1', async () => {
+  await CatalogPage.openProduct('Sauce Labs Backpack');
+  // ...
 });
 ```
 
@@ -118,5 +116,5 @@ Prefer **Isolated** and **Self-validating** above the others. Fast and Repeatabl
 
 ## See also
 
-- [`playwright-conventions.md`](playwright-conventions.md) — overlap on "no waitForTimeout" (Fast + Repeatable)
+- [`wdio-conventions.md`](wdio-conventions.md) — overlap on "no fixed sleeps" (Fast + Repeatable)
 - [`workflow.md`](workflow.md) Step 7 — where these principles are consulted during render

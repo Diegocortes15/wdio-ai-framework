@@ -5,12 +5,12 @@
 ## Discovery order (cheap → expensive)
 
 1. **The ticket** — already read in workflow Step 2 (Atlassian MCP `getJiraIssue`).
-2. **The authoring contract** — `docs/jira-tickets.md`: what a good ticket looks like (mirrors the rubric).
+2. **The authoring contract** — `docs/jira-tickets.md` when present: what a good ticket looks like (mirrors the rubric).
 3. **Existing automation (ground truth)** — read the repo:
    - `src/pages/` — real Page Objects + their action methods (confirms locations + capabilities).
    - `tests/` — existing specs (feeds the rubric's coverage flag).
-   - `data/` — named scenarios and reference data (confirms data). In *this* repo it holds only `shared/products.json`; the users live in `docs/app/users.md` (source 4). Check both rather than assuming either.
-   - `src/fixtures/`, `src/components/` — what's wired.
+   - `data/` — named scenarios and reference data (confirms data). Test accounts may live here, in `docs/app/` (source 4), or only in the tickets and on the app's own login screen. Check each rather than assuming any.
+   - `src/components/`, and `src/fixtures/` or `src/hooks/` where they exist — what's wired, including the state every test starts from.
 4. **App domain knowledge** — `docs/app/` when present: `users.md` (the real users), `flows.md`, `overview.md`, `glossary.md`.
 5. **Framework judgment** — `CLAUDE.md`, `from-issue/references/bucket-classification.md`, `from-issue/references/smoke-policy.md`, `from-issue/references/qa-analysis.md`.
 6. **User-supplied** — anything the user points at mid-loop (next section).

@@ -29,7 +29,7 @@ Budget: **3 fix attempts.** For each attempt:
 1. State the diagnosis in one line before editing — what failed and why.
 2. Apply the **narrowest** fix, and only to artifacts THIS run produced: the spec, and the
    Page Object if this run created it or appended to it. Verify a corrected selector against
-   the live page with `/playwright-cli` instead of guessing a second time.
+   a live page source dump (`driver.getPageSource()`) instead of guessing a second time.
 3. Re-run Step 9 (if the typecheck failed) and Step 10.
 4. Record the attempt: diagnosis, what changed, resulting status.
 
@@ -40,7 +40,7 @@ diagnosis isn't converging, and further attempts spend tokens without producing 
 
 - delete a failing test, or mark it `.skip()` / `.fixme()`
 - weaken an assertion, or change an expected value to whatever the app happened to emit
-- add `await page.waitForTimeout()` (lint blocks it — use auto-waiting assertions)
+- add `browser.pause()` or any fixed sleep (lint blocks `browser.pause()` — use auto-waiting assertions)
 - reinterpret an AC to match observed behavior
 - edit a spec or Page Object member this run did not generate — the one exception is the
   deliberate Page Object modification already resolved in Step 5
@@ -72,8 +72,23 @@ Report to the user:
 Then stop. Do not ask whether to open the PR anyway — the gate is the point.
 
 **Where the test goes next is not your call** (ADR-0024). If the user decides the application
-is at fault and files a defect, the test lands annotated with `test.fail()` referencing that
-defect — it runs for real, keeps CI green while the bug lives, and turns red the day the fix
-lands. **Never apply that annotation yourself, and never offer to.** An agent that can mark
-any failing test as expected-to-fail has a one-line way to make anything green, which is the
-same escape hatch as weakening an assertion. Report; the person decides.
+is at fault and files a defect, the test lands as `itFails('<DEFECT-KEY>', …)` (this repo's
+`test.fail()`) — it runs for real, keeps the suite green while the bug lives, and turns red the
+day the fix lands. **Never apply that marker on your own diagnosis, and never offer to.** An
+agent that can mark any failing test as expected-to-fail has a one-line way to make anything
+green, which is the same escape hatch as weakening an assertion. Report; the person decides.
+
+**The one case where the run applies it: the decision is already on the ticket.** When the
+refined acceptance criteria state that an AC is contradicted by a named, filed defect (e.g.
+"AC 6 lands as an expected failure tied to OR-4"), a person has already made the call this
+section reserves for them. Then, before marking it:
+
+1. Run the test as a plain `it` and read the failure.
+2. Confirm the failure **is the defect's** — the same wrong behaviour the defect describes,
+   at the step it describes. A timeout, a missing element or any other failure is not the
+   defect; that is an ordinary failure and goes through this loop.
+3. Only then render it as `itFails('<DEFECT-KEY>', …)`, and say in the PR body which
+   failure you saw and that it matched.
+
+`itFails` passes on **any** failure, not only the defect's, so step 2 is what stands between
+the marker and a test that hides an unrelated break.

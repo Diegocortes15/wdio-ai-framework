@@ -92,8 +92,9 @@ being broken:
 > products are listed in descending alphabetical order."
 
 Generate the test asserting exactly that. If the application disagrees, **the test has found a
-bug** — the ADR-0020 gate stops the run and reports; landing it as `test.fail()` against a filed
-defect is a separate, human-approved step (ADR-0024). Never soften the assertion to match what
+bug** — the ADR-0020 gate stops the run and reports; landing it as an expected failure (`itFails`)
+against a filed defect is a separate, human-approved step (ADR-0024) — see `fix-loop.md` for the
+one case where the ticket already carries that approval. Never soften the assertion to match what
 the app does.
 
 **An AC stating observed behaviour** describes what the system currently does, brokenness

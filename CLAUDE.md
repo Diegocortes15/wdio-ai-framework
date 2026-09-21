@@ -15,10 +15,8 @@ The repository tests one thesis: the AI layer (skills + governance) ports to a d
 measurement is **how many skill lines had to change** — the Phase 1 baseline is 0. Context, measurements
 and decisions already closed: `docs/PORT-BRIEF.md`. Read it before proposing anything structural.
 
-## Language
-
-Everything written to the repository is **English** — code, comments, commit messages, docs, test titles,
-lint messages — whatever language the conversation is in.
+**Everything written to the repository is English** — code, comments, commits, docs, test titles, lint
+messages — whatever language the conversation is in.
 
 ## Quick run
 
@@ -29,41 +27,38 @@ export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
 
 npm run emulator     # boots the AVD and disables the Google apps that ANR over the SUT
 npm test             # the whole suite
-npm run test:smoke   # mocha grep @smoke
+npm run test:smoke   # tests whose title ends in @smoke
+npm run test:unit    # unit tests of the Qase sync (no device)
 npm run typecheck
 npm run lint
 ```
 
-Binaries live in `node_modules/.bin`: invoke them through `npm run` or `npx`, never bare.
-
-Start Appium only through the WDIO service or from the project root — Appium 3 resolves drivers against
+Binaries live in `node_modules/.bin`: invoke them through `npm run` or `npx`, never bare. Start Appium only through the WDIO service or from the project root — Appium 3 resolves drivers against
 the `package.json` of the working directory.
 
 ## Where things live
 
-| What                        | Where                                        |
-| --------------------------- | -------------------------------------------- |
-| Page Objects                | `src/pages/` — exported as singletons        |
-| Components                  | `src/components/`                            |
-| Specs                       | `tests/<feature>/*.spec.ts`                  |
-| Test data                   | `data/` — inline in the spec is the default  |
-| WDIO config (Android)       | `wdio.android.conf.ts`                       |
-| App reset before each test  | `src/hooks/reset-app.ts` (Mocha root hook)   |
-| Expected failure (ADR-0024) | `itFails` in `src/utils/expected-failure.ts` |
-| Lint gates                  | `eslint.config.js`                           |
-| Emulator boot + preflight   | `scripts/start-emulator.sh`                  |
-| App under test (the APK)    | `apps/` — gitignored                         |
-| Appium server log           | `logs/` — gitignored                         |
-| Port context and measures   | `docs/PORT-BRIEF.md`                         |
-| Skills                      | `.claude/skills/<name>/`                     |
+| What                        | Where                                                               |
+| --------------------------- | ------------------------------------------------------------------- |
+| Page Objects                | `src/pages/` — exported as singletons                               |
+| Components                  | `src/components/`                                                   |
+| Specs                       | `tests/<feature>/*.spec.ts`                                         |
+| Test data                   | `data/` — inline in the spec is the default                         |
+| WDIO config (Android)       | `wdio.android.conf.ts`                                              |
+| App reset before each test  | `src/hooks/reset-app.ts` (Mocha root hook)                          |
+| Expected failure (ADR-0024) | `itFails` in `src/utils/expected-failure.ts`                        |
+| Named steps (`test.step`)   | `step` in `src/utils/step.ts`; run records in `test-results/steps/` |
+| Qase catalogue sync         | `src/tcms/`, `.tcms/records/`, `qase-map.json` (ADR-0041)           |
+| Lint gates                  | `eslint.config.js`                                                  |
+| Emulator boot + preflight   | `scripts/start-emulator.sh`                                         |
+| App under test (the APK)    | `apps/` — gitignored                                                |
+| Appium server log           | `logs/` — gitignored                                                |
+| Port context and measures   | `docs/PORT-BRIEF.md`                                                |
+| Skills                      | `.claude/skills/<name>/`                                            |
 
 There is **no fixture layer**: tests import Page Objects directly (`import LoginPage from '@pages/LoginPage'`)
-and use the WDIO globals (`$`, `driver`, `expect`).
-
-## Path aliases
-
-`@data/*`, `@pages/*`, `@components/*`, `@utils/*` → `data/`, `src/pages/`, `src/components/`,
-`src/utils/` (`tsconfig.json`).
+and use the WDIO globals (`$`, `driver`, `expect`). Aliases `@data/*`, `@pages/*`, `@components/*`,
+`@utils/*` map to `data/`, `src/pages/`, `src/components/`, `src/utils/` (`tsconfig.json`).
 
 ## Composition rules (must follow)
 
@@ -94,15 +89,17 @@ in through `LoginPage` as its own setup. Never share state between tests, and ne
 
 ## Tag conventions
 
-`@smoke` is the only tag, filtered by `npm run test:smoke`. The web repository's **routing** tags
+`@smoke` is the only tag. Mocha has no tag option, so it goes at the **end of the test title** —
+`npm run test:smoke` greps titles. The web repository's **routing** tags
 (`@no-auth`, one tag per user) chose which pre-authenticated project ran a test; here every test starts
 logged out and logs in itself, so there is nothing to route. Do not add routing tags.
 
 ## Custom skills
 
 `/refine-ticket`, `/from-issue`, `/scaffold-page-object`, `/report-bug` — copied verbatim from the web
-repository and still Playwright-flavoured in places. **Every line changed in a skill is the cost the
-thesis measures**: change one only on purpose, and say so in the PR body.
+repository, then adapted where they broke. `/from-issue` and `/refine-ticket` are adapted;
+`/scaffold-page-object` and `/report-bug` still assume Playwright. **Every line changed in a skill is the
+cost the thesis measures**: change one only on purpose, and say so in the PR body.
 
 **A skill directory is the portability boundary** (ADR-0019). No markdown link inside a skill may resolve
 outside it: cite ADRs as plain text, write repository paths as backticked prose, reference a sibling skill
@@ -117,8 +114,9 @@ grep -rn "](\.\./\|](/\|](docs/\|](src/\|](tests/\|](data/" .claude/skills/
 - Tickets come from **Jira** through the Atlassian MCP — project **`OR`**. `gh` CLI for GitHub; no GitHub
   MCP server (ADR-0007, scoped by ADR-0011).
 - **PR titles follow Conventional Commits.** The repository squash-merges, so the title becomes the commit.
-- **There is no CI.** Before opening a PR, run `npm run typecheck`, `npm run lint`, `npm run format:check`
-  and the affected specs locally, green. A PR is opened only on a green local run.
+- **CI does not run the suite** — no device yet. Its only job syncs the Qase catalogue when records change on
+  `main` (ADR-0041). Before opening a PR, run `npm run typecheck`, `npm run lint`, `npm run format:check`,
+  `npm run test:unit` and the affected specs locally, green. A PR is opened only on a green local run.
 - **Commit only when asked.**
 
 ## ADRs
