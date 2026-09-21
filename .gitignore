@@ -1,0 +1,6 @@
+node_modules/
+apps/*.apk
+apps/*.zip
+.env
+logs/
+dumps/
