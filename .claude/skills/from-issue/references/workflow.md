@@ -46,7 +46,7 @@ key comes from the file's front matter. `gh auth status` is still required unles
 
 **Otherwise:** check that a Jira issue **key** is present and matches `^[A-Z][A-Z0-9]+-\d+$` (e.g. `SW-123`). If missing or malformed, ask the user — don't guess.
 
-Confirm the **Atlassian MCP** is connected (the skill reads tickets through it). If no Atlassian MCP tool is available, abort with: _"The Atlassian MCP isn't connected. Connect it in Claude Code (OAuth), then re-run — or pass `--from-file <path>` to read a ticket from disk instead."_
+Confirm the **Atlassian MCP** is connected (the skill reads tickets through it). **The check is a call, not a look at the tool list:** call `getAccessibleAtlassianResources`. A server can show as connected and still expose no tools — its tool listing timed out — and a tool search reports that as "still connecting" indefinitely. So: if the tool is unavailable or the call fails, wait once (~30 s) and call again; if it fails a second time, abort. Do not keep waiting, and do not run Step 1.5 or any later step after aborting. Abort with: _"The Atlassian MCP isn't connected (its tools did not load). Reconnect it with `/mcp` → atlassian → Reconnect, or restart Claude Code with a longer MCP start-up timeout (`MCP_TIMEOUT=90000 claude`), then re-run — or pass `--from-file <path>` to read a ticket from disk instead."_
 
 Check `gh auth status` exits 0 (needed for the PR in Step 12). If not, abort with: _"`gh` is not authenticated. Run `gh auth login` and re-run."_
 
