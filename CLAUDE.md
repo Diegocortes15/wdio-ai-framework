@@ -29,12 +29,17 @@ npm run emulator     # boots the AVD and disables the Google apps that ANR over 
 npm test             # the whole suite
 npm run test:smoke   # tests whose title ends in @smoke
 npm run test:unit    # unit tests of the Qase sync (no device)
-npm run typecheck
-npm run lint
+npm run typecheck && npm run lint && npm run format:check
 ```
 
 Binaries live in `node_modules/.bin`: invoke them through `npm run` or `npx`, never bare. Start Appium only through the WDIO service or from the project root — Appium 3 resolves drivers against
 the `package.json` of the working directory.
+
+## Inspecting the live app
+
+The `wdio-mcp` MCP server (`@wdio/mcp`, pinned, in `.mcp.json`) drives the app for selector discovery. It needs
+its own Appium: `npm run appium:explore` (127.0.0.1:4725; the test run's Appium uses 4723). Running the suite
+kills an open exploration session — start a new one after. How to use it: `wdio-conventions.md`.
 
 ## Where things live
 
@@ -49,11 +54,8 @@ the `package.json` of the working directory.
 | Expected failure (ADR-0024) | `itFails` in `src/utils/expected-failure.ts`                        |
 | Named steps (`test.step`)   | `step` in `src/utils/step.ts`; run records in `test-results/steps/` |
 | Qase catalogue sync         | `src/tcms/`, `.tcms/records/`, `qase-map.json` (ADR-0041)           |
-| Lint gates                  | `eslint.config.js`                                                  |
-| Emulator boot + preflight   | `scripts/start-emulator.sh`                                         |
 | App under test (the APK)    | `apps/` — gitignored                                                |
 | Appium server log           | `logs/` — gitignored                                                |
-| Port context and measures   | `docs/PORT-BRIEF.md`                                                |
 | Skills                      | `.claude/skills/<name>/`                                            |
 
 There is **no fixture layer**: tests import Page Objects directly (`import LoginPage from '@pages/LoginPage'`)
@@ -77,9 +79,8 @@ and use the WDIO globals (`$`, `driver`, `expect`). Aliases `@data/*`, `@pages/*
 
 ## Selectors
 
-Order: `~accessibility id` → `id=` (resource-id) → `-android uiautomator` / `-ios predicate string` →
-`-ios class chain`. **Only XPath is a build gate** (`eslint.config.js`); the order is authoring guidance.
-`$()` returns the first match silently — count matches before trusting a selector.
+Order: `~accessibility id` → `id=` → `UiSelector` / predicate string → class chain. **Only XPath is a build
+gate**. `$()` returns the first match silently — count matches first (`wdio-conventions.md`).
 
 ## Session strategy
 

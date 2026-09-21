@@ -29,7 +29,7 @@ Budget: **3 fix attempts.** For each attempt:
 1. State the diagnosis in one line before editing — what failed and why.
 2. Apply the **narrowest** fix, and only to artifacts THIS run produced: the spec, and the
    Page Object if this run created it or appended to it. Verify a corrected selector against
-   a live page source dump (`driver.getPageSource()`) instead of guessing a second time.
+   the live app (`wdio-conventions.md` "Inspecting the live app") instead of guessing a second time.
 3. Re-run Step 9 (if the typecheck failed) and Step 10.
 4. Record the attempt: diagnosis, what changed, resulting status.
 

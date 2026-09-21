@@ -41,10 +41,22 @@ So counting matters *more* here than on the web, not less. There is no runtime e
 
 ### What to do when you write a locator
 
-1. **Count it on the screen it belongs to** — against a page source dump (`driver.getPageSource()`), not by reasoning about the layout. One match is the answer you want.
+1. **Count it on the screen it belongs to** — against the live app (see "Inspecting the live app" below), not by reasoning about the layout. One match is the answer you want.
 2. **Count it on the screens a test arrives from.** A header, a list row or an error label can exist on several screens.
 3. **When it is ambiguous, narrow it at the highest level that gives one match** — usually `UiSelector().fromParent()` / `.childSelector()` on Android, or a predicate combining `label` and `type` on iOS. Say which level you took and why, at the call site.
 4. **Never use `$$(sel)[0]` to quiet an ambiguous locator.** It turns "which element is this?" into an arbitrary answer.
+
+### Inspecting the live app
+
+Selectors are verified against the running app before they are written, never inferred from the ticket or from memory. In this repository the tool is the `wdio-mcp` MCP server (`@wdio/mcp`), which drives its own Appium session:
+
+- **`start_session`** with `platform: 'android'`, the device name, the APK's absolute `appPath`, `appWaitActivity: '*'` and **`autoAcceptAlerts: false`**. Its default accepts system dialogs silently — and a system dialog over the app is exactly what you need to see when an element "does not exist".
+- **`get_elements`** with `includeContainers: true` and `inViewportOnly: false` lists every element with its accessibility id, resource-id and text. By default it keeps only elements in the viewport and drops layout containers — and a count taken over part of the screen is not a count.
+- **A suggested selector ending in `.instance(N)` means the plain selector matches more than one element.** That is the count, delivered for you: narrow it, do not keep the suffix.
+- **Never copy an XPath the tool suggests** (`altSelector` often is one). XPath fails the build here.
+- **`close_session` when done.** Running the suite on the same device kills an open exploration session; start a new one afterwards.
+
+Where no such tool is available, a throwaway spec that logs `driver.getPageSource()` answers the same questions — count the matches in the XML.
 
 ### Elements that exist only while shown
 
