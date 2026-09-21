@@ -23,6 +23,19 @@ class LoginPage {
     return $('~Tap to login with given credentials');
   }
 
+  // Both error labels exist only after a rejected submit, and carry no
+  // content-desc (the "Indicates error" icon beside each one does, but it is
+  // shared by both fields), so resource-id is the highest unique level.
+  // Verified 2026-09-21: 1 match each. The locked-out message also renders in
+  // passwordErrorTV.
+  get usernameError() {
+    return $(`id=${PKG}/nameErrorTV`);
+  }
+
+  get passwordError() {
+    return $(`id=${PKG}/passwordErrorTV`);
+  }
+
   /** Opens the login screen from any screen that shows the header. */
   async open(): Promise<void> {
     await step('Open the login screen from the menu', async () => {

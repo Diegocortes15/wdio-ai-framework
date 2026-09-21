@@ -33,6 +33,20 @@ class CatalogPage {
   async getProductNames(): Promise<string[]> {
     return $$(`id=${PKG}/titleTV`).map((e) => e.getText());
   }
+
+  /**
+   * Query: whether the catalog appears within `ms`. For asserting that a
+   * navigation does NOT happen — an absence is true the instant before the
+   * screen arrives, so it has to be watched for a bounded window.
+   */
+  async opensWithin(ms: number): Promise<boolean> {
+    try {
+      await this.title.waitForDisplayed({ timeout: ms });
+      return true;
+    } catch {
+      return false;
+    }
+  }
 }
 
 export default new CatalogPage();
