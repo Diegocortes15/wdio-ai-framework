@@ -13,7 +13,7 @@ const NAVIGATION_WINDOW_MS = 5_000; // measured 2026-09-21: a sign-in reaches th
 // a single line of any skill is adapted.
 describe('Login — no auth', () => {
   describe('Positive', () => {
-    it('bod@example.com logs in and lands on the catalog', async () => {
+    it('bod@example.com logs in and lands on the catalog @smoke', async () => {
       await LoginPage.open();
       await expect(LoginPage.usernameInput).toBeDisplayed();
 
