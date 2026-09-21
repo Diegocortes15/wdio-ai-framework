@@ -16,7 +16,7 @@ One object per generated test, from the Step 6 model:
     {
       "title": "<the test title exactly as written in the spec, @smoke included>",
       "acText": "<the AC text this test covers — the human-readable expected outcome>",
-      "user": "<the account the test signs in as, or no-auth>",
+      "user": "<the account the test enters in the login form, or no-auth>",
       "tags": ["@smoke"],
       "bucket": "Positive | Negative | Edge",
       "feature": "<feature slug, e.g. login>",
@@ -30,6 +30,7 @@ One object per generated test, from the Step 6 model:
 
 - **`title`** is the spec's `it(...)` title as written. For an `itFails` test, it is the title passed to `itFails` — without the `[expected failure: …]` suffix the helper adds at run time.
 - **`steps`** are copied from the test's run record under `test-results/steps/` (written by Step 10's target-spec run): the `title` of each entry in its `steps` array, in order. **Never invent them** — if the run record is missing, write `[]` and say so in the PR body; the sync then gives the case a single generic step.
+- **`user`** is the account the test **enters in the login form**, whether or not the app lets it in — a rejection test (wrong password, locked-out account) names the account it tried. It is `no-auth` only when the test enters no account at all: it never touches the login form, or it submits the username empty.
 - **`jira`** lists the ticket(s) **this** test traces to — usually just the one you're working.
 
 Write/append with the Write tool and `git add` it alongside the spec. Skip under `dry-run` **and under `--from-file`** (see below). The sync rejects a record missing a non-empty `jira` array or a `steps` array, and two records with the same `feature › context › bucket › title`.
