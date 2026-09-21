@@ -1,4 +1,5 @@
 import { Header } from '@components/Header';
+import { step } from '@utils/step';
 
 const PKG = 'com.saucelabs.mydemoapp.android:id';
 
@@ -24,15 +25,21 @@ class LoginPage {
 
   /** Opens the login screen from any screen that shows the header. */
   async open(): Promise<void> {
-    await this.header.openMenu();
-    await $('~Login Menu Item').click();
-    await this.usernameInput.waitForDisplayed();
+    await step('Open the login screen from the menu', async () => {
+      await this.header.openMenu();
+      await $('~Login Menu Item').click();
+      await this.usernameInput.waitForDisplayed();
+    });
   }
 
+  // The step names the username and never the password: step titles are
+  // written to disk and into bug reports.
   async loginAs(username: string, password: string): Promise<void> {
-    await this.usernameInput.setValue(username);
-    await this.passwordInput.setValue(password);
-    await this.loginButton.click();
+    await step(`Submit credentials for "${username}"`, async () => {
+      await this.usernameInput.setValue(username);
+      await this.passwordInput.setValue(password);
+      await this.loginButton.click();
+    });
   }
 }
 

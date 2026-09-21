@@ -2,6 +2,8 @@
 // a Component rather than a page-direct locator (composition rule 10).
 // A Component knows Locators and, at most, child Components. Never Pages.
 
+import { step } from '@utils/step';
+
 export class Header {
   // Measured in the page source (2026-09-18): all three are unique
   // content-desc values on every screen where the header appears.
@@ -14,10 +16,10 @@ export class Header {
   }
 
   async openMenu(): Promise<void> {
-    await this.menuButton.click();
+    await step('Open the menu', () => this.menuButton.click());
   }
 
   async openCart(): Promise<void> {
-    await this.cartButton.click();
+    await step('Open the cart', () => this.cartButton.click());
   }
 }

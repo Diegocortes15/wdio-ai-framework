@@ -1,5 +1,7 @@
+import { rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { APP_PACKAGE } from './src/hooks/reset-app';
+import { STEPS_DIR, startStepRecord, writeStepRecord } from './src/hooks/record-steps';
 
 export const config: WebdriverIO.Config = {
   runner: 'local',
@@ -46,6 +48,15 @@ export const config: WebdriverIO.Config = {
 
   framework: 'mocha',
   reporters: ['spec'],
-  // The app reset before every test lives in a Mocha root hook (ADR-0040).
+  // The app reset before every test is a Mocha root hook (ADR-0040): a reset
+  // that fails has to fail the test, and WDIO's own hooks swallow errors.
   mochaOpts: { ui: 'bdd', timeout: 120_000, require: ['./src/hooks/reset-app.ts'] },
+
+  // The per-test step record the skills read. A run's records describe that
+  // run only, so they are cleared when it starts.
+  onPrepare: () => {
+    rmSync(STEPS_DIR, { recursive: true, force: true });
+  },
+  beforeTest: () => startStepRecord(),
+  afterTest: (test, context, result) => writeStepRecord(test, context, result),
 };

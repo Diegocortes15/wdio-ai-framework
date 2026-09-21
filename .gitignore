@@ -4,3 +4,4 @@ apps/*.zip
 .env
 logs/
 dumps/
+test-results/

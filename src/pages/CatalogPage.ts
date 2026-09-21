@@ -1,4 +1,5 @@
 import { Header } from '@components/Header';
+import { step } from '@utils/step';
 
 const PKG = 'com.saucelabs.mydemoapp.android:id';
 
@@ -23,7 +24,9 @@ class CatalogPage {
   }
 
   async openProduct(productName: string): Promise<void> {
-    await this.productImageFor(productName).click();
+    await step(`Open the product "${productName}"`, () =>
+      this.productImageFor(productName).click(),
+    );
   }
 
   /** Query: returns data, never a Locator (composition rule 8). */
