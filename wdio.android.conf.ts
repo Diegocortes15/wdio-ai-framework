@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { APP_PACKAGE } from './src/hooks/reset-app';
 
 export const config: WebdriverIO.Config = {
   runner: 'local',
@@ -13,7 +14,7 @@ export const config: WebdriverIO.Config = {
       'appium:automationName': 'UiAutomator2',
       'appium:deviceName': 'emulator-5554',
       'appium:app': join(process.cwd(), 'apps', 'mda-2.2.0-25.apk'),
-      'appium:appPackage': 'com.saucelabs.mydemoapp.android',
+      'appium:appPackage': APP_PACKAGE,
       'appium:appActivity': '.view.activities.SplashActivity',
       // Measured 2026-09-18: neither the cart nor the session survives process
       // death. fullReset=false avoids reinstalling the APK for every spec (slow);
@@ -45,5 +46,6 @@ export const config: WebdriverIO.Config = {
 
   framework: 'mocha',
   reporters: ['spec'],
-  mochaOpts: { ui: 'bdd', timeout: 120_000 },
+  // The app reset before every test lives in a Mocha root hook (ADR-0040).
+  mochaOpts: { ui: 'bdd', timeout: 120_000, require: ['./src/hooks/reset-app.ts'] },
 };
