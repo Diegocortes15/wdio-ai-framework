@@ -203,9 +203,9 @@ ls src/pages/checkout/<PageName>.ts 2>/dev/null
   - **Irreconcilable** — if a required change would break the existing method's contract in a way you cannot reconcile, **abort**: _"augmenting <KEY> needs `<Method>` to change incompatibly; edit `<PageObject>` manually, then re-run."_ No PR.
 - **Neither path exists** → invoke `/scaffold-page-object` with inputs:
   - Page name: `<PageName>`
-  - How to reach the screen: the navigation from the app's launch screen, inferred from the AC text (e.g. "the cart" → tap the header's cart button). A mobile screen has no URL.
+  - How to reach the screen: the navigation from the app's launch screen, inferred from the AC text (e.g. "the cart" → tap the header's cart button). A mobile screen has no URL, so this is the input that replaces one.
 
-  **`/scaffold-page-object` has not been adapted to Appium page source yet.** Until it is, abort instead of invoking it: _"`<KEY>` needs a new Page Object (`<PageName>`), and /scaffold-page-object does not read Appium page source yet. Write the Page Object by hand, then re-run."_ No PR. Report it under Obstacles as a reference gap in `scaffold-page-object/references/workflow.md`.
+  That skill drives the app through its own Appium (`npm run appium:explore`, port 4725) and **closes its session when it finishes**. Confirm it did before Step 10: the suite and an open exploration session fight over the device's instrumentation, and the suite wins — silently, from this run's point of view.
 
   If `/scaffold-page-object` fails, abort with the subprocess error verbatim. No PR.
 
