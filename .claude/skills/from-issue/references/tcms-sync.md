@@ -29,7 +29,7 @@ One object per generated test, from the Step 6 model:
 ```
 
 - **`title`** is the spec's `it(...)` title as written, tags included — it is how a reader finds the test in the repository. For an `itFails` test, it is the title passed to `itFails`, without the `[expected failure: …]` suffix the helper adds at run time. **The sync strips trailing tags from the Qase case title** and sends them as Qase tags, so the case reads as prose and `@smoke` is a label you can filter on.
-- **`steps`** are copied from the test's run record under `test-results/steps/` (written by Step 10's target-spec run): the `title` of each entry in its `steps` array, in order. **Never invent them** — if the run record is missing, write `[]` and say so in the PR body; the sync then gives the case a single generic step.
+- **`steps`** are copied from the test's run record under `test-results/steps/` (written by Step 10's target-spec run): the `title` of each entry in its `steps` array, in order. A record's own `title` field is the **full Mocha path** (`<feature> — <context> <bucket> <test title>`), not the `it` title, so match a record to its test on the path's tail — or on the file name, which is that path slugified. **Never invent them** — if the run record is missing, write `[]` and say so in the PR body; the sync then gives the case a single generic step.
 - **`user`** is the account the test **enters in the login form**, whether or not the app lets it in — a rejection test (wrong password, locked-out account) names the account it tried. It is `no-auth` only when the test enters no account at all: it never touches the login form, or it submits the username empty.
 - **`jira`** lists the ticket(s) **this** test traces to — usually just the one you're working.
 

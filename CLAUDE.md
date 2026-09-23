@@ -64,7 +64,7 @@ There is **no fixture layer**: tests import Page Objects directly and use the WD
 1. A Component knows Locators and, at most, child Components. Never Pages, never its parent.
 2. A Page composes Components and holds page-unique locators. Never composes other Pages.
 3. **Pages never return other Pages.** Methods return `void` or data. Navigation lives in the spec.
-4. Tests know Pages and Data only — never raw locators or Components. Convention, not a technical barrier.
+4. Tests know Pages and Data only — never a raw locator, never a Component imported into a spec. Through the Page that composes it (`CartPage.header.cartBadge`) is fine.
 5. Locator and component fields are `readonly` (or getters), set once.
 6. Constructor order: composed Components first, page-direct locators second.
 7. Action methods read like English: `LoginPage.loginAs(user, password)`.

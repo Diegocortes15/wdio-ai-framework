@@ -59,6 +59,15 @@ Selectors are verified against the running app before they are written, never in
 
 Where no such tool is available, a throwaway spec that logs `driver.getPageSource()` answers the same questions — count the matches in the XML.
 
+### A locator unique on every screen can still be the wrong arrival signal
+
+Counting matches per screen is not enough on mobile, because only one screen is in the tree at a time. An id reused across screens counts **1 everywhere** and still cannot tell you where you are. Measured in this app: `productTV` is the catalog's "Products", the product detail's product name and the cart's "My Cart"; `cartBt` is both "Add to cart" and "Proceed To Checkout".
+
+The consequence is specific: **`waitForDisplayed` on such an element passes instantly on the screen you are leaving**, so a navigation method that waits on the destination's title does not wait at all, and the next line reads the old screen.
+
+- **Anchor a navigation on something only the destination has** — the cart list's own `content-desc`, a button unique to that screen. Then assert the title's **text**, which does distinguish the screens.
+- **Assert text, not presence**, for any element whose id is shared. `toHaveText` fails on the wrong screen; `toBeDisplayed` passes on both.
+
 ### Elements that exist only while shown
 
 Some elements are absent from the view tree until they are displayed — validation messages are the usual case (`nameErrorTV` on the login screen appears only after a failed submit), and the cart badge is absent, not zero, when the cart is empty. Assert on them with an auto-waiting matcher (`toHaveText`, `toBeDisplayed`); a count of zero is the resting state, not a broken locator.
@@ -79,7 +88,7 @@ Stated here rather than cited, because a skill lifted into another repository ta
 
 **A Page composes Components and holds page-unique locators.** It never composes another Page.
 
-**Tests know Pages and Data only** — never a raw `$()` built in the spec, never a Component directly.
+**Tests know Pages and Data only** — never a raw `$()` built in the spec, never a Component imported into it. Reaching a component **through the Page that composes it** is allowed and is the intended shape: `ProductDetailPage.header.cartBadge` is the header of the screen the test is on. What the rule forbids is a spec constructing or importing a Component itself, or building its own locator.
 
 **Page Objects are exported as singletons** (`export default new LoginPage()`), because WebdriverIO has no fixtures to inject them. A spec imports the Page it uses (`import LoginPage from '@pages/LoginPage'`). Locators are getters, so each access re-queries the current screen instead of holding a stale element.
 
