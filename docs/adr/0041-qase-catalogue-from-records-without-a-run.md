@@ -1,7 +1,7 @@
 # 0041 — The Qase catalogue syncs from the committed records alone, without a run (scopes ADR-0017)
 
 **Date:** 2026-09-21
-**Status:** Proposed
+**Status:** Superseded by ADR-0043 (the `qase-map.json` half only; syncing from records without a run stands)
 **Confidence:** Medium — the sync logic is unit-tested against a fake seam; the Qase API path is the
 web repository's, unchanged, but it has not yet run against this repository's project.
 **Review by:** — when a device cloud (BrowserStack) makes a CI run of the suite possible; run results

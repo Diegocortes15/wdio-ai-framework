@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      contents: write # commit the refreshed qase-map.json back
+      contents: read # the sync reads the records and writes only to Qase (ADR-0043)
     steps:
       - uses: actions/checkout@v4
 
@@ -36,17 +36,3 @@ jobs:
           QASE_API_TOKEN: ${{ secrets.QASE_API_TOKEN }}
           QASE_PROJECT_CODE: ${{ secrets.QASE_PROJECT_CODE }}
         run: npm run tcms:sync
-
-      # Keep the committed map equal to the live case ids. `[skip ci]` stops this
-      # commit from triggering the workflow again.
-      - name: Commit refreshed qase-map.json
-        run: |
-          if [ -n "$(git status --porcelain qase-map.json)" ]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add qase-map.json
-            git commit -m "chore(tcms): refresh qase-map.json [skip ci]"
-            git push origin "HEAD:${{ github.ref_name }}"
-          else
-            echo "qase-map.json unchanged — nothing to commit."
-          fi
