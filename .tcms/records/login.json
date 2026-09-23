@@ -1,6 +1,22 @@
 {
   "records": [
     {
+      "title": "bod@example.com logs in and lands on the catalog @smoke",
+      "acText": "WHEN the shopper submits bod@example.com with password 10203040, the app shall return to the catalog, whose title reads \"Products\".",
+      "user": "bod@example.com",
+      "tags": ["@smoke"],
+      "bucket": "Positive",
+      "feature": "login",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-1",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-1"
+        }
+      ],
+      "steps": ["Open the login screen from the menu", "Submit credentials for \"bod@example.com\""]
+    },
+    {
       "title": "\"Log In\" in the menu opens the login screen with its username, password and Login controls",
       "acText": "WHEN the shopper opens the burger menu on the catalog and taps \"Log In\", the login screen shall display the username field, the password field and the Login button.",
       "user": "no-auth",
@@ -8,7 +24,12 @@
       "bucket": "Positive",
       "feature": "login",
       "contextLabel": "no auth",
-      "jira": [{ "key": "OR-1", "url": "https://diegocortes15.atlassian.net/browse/OR-1" }],
+      "jira": [
+        {
+          "key": "OR-1",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-1"
+        }
+      ],
       "steps": ["Open the login screen from the menu"]
     },
     {
@@ -19,7 +40,12 @@
       "bucket": "Negative",
       "feature": "login",
       "contextLabel": "no auth",
-      "jira": [{ "key": "OR-1", "url": "https://diegocortes15.atlassian.net/browse/OR-1" }],
+      "jira": [
+        {
+          "key": "OR-1",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-1"
+        }
+      ],
       "steps": ["Open the login screen from the menu", "Submit credentials for \"\""]
     },
     {
@@ -30,7 +56,12 @@
       "bucket": "Negative",
       "feature": "login",
       "contextLabel": "no auth",
-      "jira": [{ "key": "OR-1", "url": "https://diegocortes15.atlassian.net/browse/OR-1" }],
+      "jira": [
+        {
+          "key": "OR-1",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-1"
+        }
+      ],
       "steps": ["Open the login screen from the menu", "Submit credentials for \"bod@example.com\""]
     },
     {
@@ -41,7 +72,12 @@
       "bucket": "Negative",
       "feature": "login",
       "contextLabel": "no auth",
-      "jira": [{ "key": "OR-1", "url": "https://diegocortes15.atlassian.net/browse/OR-1" }],
+      "jira": [
+        {
+          "key": "OR-1",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-1"
+        }
+      ],
       "steps": [
         "Open the login screen from the menu",
         "Submit credentials for \"alice@example.com\""
@@ -55,7 +91,12 @@
       "bucket": "Negative",
       "feature": "login",
       "contextLabel": "no auth",
-      "jira": [{ "key": "OR-1", "url": "https://diegocortes15.atlassian.net/browse/OR-1" }],
+      "jira": [
+        {
+          "key": "OR-1",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-1"
+        }
+      ],
       "steps": [
         "Open the login screen from the menu",
         "Submit credentials for \"bod@example.com\""
@@ -74,7 +115,12 @@
       "bucket": "Negative",
       "feature": "login",
       "contextLabel": "no auth",
-      "jira": [{ "key": "OR-1", "url": "https://diegocortes15.atlassian.net/browse/OR-1" }],
+      "jira": [
+        {
+          "key": "OR-1",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-1"
+        }
+      ],
       "steps": [
         "Open the login screen from the menu",
         "Submit credentials for \"nadie@example.com\""
@@ -93,7 +139,12 @@
       "bucket": "Edge",
       "feature": "login",
       "contextLabel": "no auth",
-      "jira": [{ "key": "OR-1", "url": "https://diegocortes15.atlassian.net/browse/OR-1" }],
+      "jira": [
+        {
+          "key": "OR-1",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-1"
+        }
+      ],
       "steps": [
         "Open the login screen from the menu",
         "Submit credentials for \"alice@example.com\""
