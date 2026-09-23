@@ -1,0 +1,193 @@
+{
+  "records": [
+    {
+      "title": "an empty cart shows no cart badge",
+      "acText": "WHILE the cart is empty, the header shall not display a cart badge \u2014 it is absent from the view tree, not showing `0`.",
+      "user": "no-auth",
+      "tags": [],
+      "bucket": "Positive",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-2",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-2"
+        }
+      ],
+      "steps": []
+    },
+    {
+      "title": "tapping the catalog card for Sauce Labs Backpack (red) opens its detail screen",
+      "acText": "WHEN the shopper taps the catalog card for `Sauce Labs Backpack (red)`, the app shall open a product detail screen titled `Sauce Labs Backpack (red)`.",
+      "user": "no-auth",
+      "tags": [],
+      "bucket": "Positive",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-2",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-2"
+        }
+      ],
+      "steps": ["Open the product \"Sauce Labs Backpack (red)\""]
+    },
+    {
+      "title": "tapping increase quantity twice sets the quantity to 3",
+      "acText": "WHEN the shopper taps the increase-quantity control twice on the detail screen, the quantity shall read `3`.",
+      "user": "no-auth",
+      "tags": [],
+      "bucket": "Positive",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-2",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-2"
+        }
+      ],
+      "steps": ["Open the product \"Sauce Labs Backpack (red)\"", "Increase the quantity 2 time(s)"]
+    },
+    {
+      "title": "adding 3 units to the cart shows a cart badge of 3 @smoke",
+      "acText": "WHEN the shopper taps Add to cart with the quantity at 3, the cart badge shall read `3`.",
+      "user": "no-auth",
+      "tags": ["@smoke"],
+      "bucket": "Positive",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-2",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-2"
+        }
+      ],
+      "steps": [
+        "Open the product \"Sauce Labs Backpack (red)\"",
+        "Increase the quantity 2 time(s)",
+        "Add the product to the cart"
+      ]
+    },
+    {
+      "title": "adding 3 units twice shows a cart badge of 6, accumulating instead of replacing",
+      "acText": "WHEN the shopper taps Add to cart a second time with the quantity at 3, the cart badge shall read `6` \u2014 the cart accumulates instead of replacing.",
+      "user": "no-auth",
+      "tags": [],
+      "bucket": "Positive",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-2",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-2"
+        }
+      ],
+      "steps": [
+        "Open the product \"Sauce Labs Backpack (red)\"",
+        "Increase the quantity 2 time(s)",
+        "Add the product to the cart",
+        "Add the product to the cart"
+      ]
+    },
+    {
+      "title": "the cart lists one row for 6 units, with name, unit price and quantity @smoke",
+      "acText": "WHEN the shopper opens the cart holding 6 units of `Sauce Labs Backpack (red)`, the cart shall list exactly one row for it, showing its name, its unit price `$ 29.99` and the quantity `6`.",
+      "user": "no-auth",
+      "tags": ["@smoke"],
+      "bucket": "Positive",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-2",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-2"
+        }
+      ],
+      "steps": [
+        "Open the product \"Sauce Labs Backpack (red)\"",
+        "Increase the quantity 2 time(s)",
+        "Add the product to the cart",
+        "Add the product to the cart",
+        "Open the cart"
+      ]
+    },
+    {
+      "title": "the cart totals read \"6 Items\" and \"$ 179.94\" for 6 units",
+      "acText": "WHEN the shopper opens the cart holding 6 units of that product, the totals shall read `6 Items` and `$ 179.94`.",
+      "user": "no-auth",
+      "tags": [],
+      "bucket": "Positive",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-2",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-2"
+        }
+      ],
+      "steps": [
+        "Open the product \"Sauce Labs Backpack (red)\"",
+        "Increase the quantity 2 time(s)",
+        "Add the product to the cart",
+        "Add the product to the cart",
+        "Open the cart"
+      ]
+    },
+    {
+      "title": "a cart holding a product is titled \"My Cart\"",
+      "acText": "WHILE the cart holds at least one product, the cart screen shall be titled `My Cart`.",
+      "user": "no-auth",
+      "tags": [],
+      "bucket": "Positive",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-2",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-2"
+        }
+      ],
+      "steps": [
+        "Open the product \"Sauce Labs Backpack (red)\"",
+        "Add the product to the cart",
+        "Open the cart"
+      ]
+    },
+    {
+      "title": "a cart holding a product shows the Proceed To Checkout button",
+      "acText": "WHILE the cart holds at least one product, the cart screen shall display a `Proceed To Checkout` button. Its presence only; the checkout flow is out of scope.",
+      "user": "no-auth",
+      "tags": [],
+      "bucket": "Positive",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-2",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-2"
+        }
+      ],
+      "steps": [
+        "Open the product \"Sauce Labs Backpack (red)\"",
+        "Add the product to the cart",
+        "Open the cart"
+      ]
+    },
+    {
+      "title": "raising the quantity without tapping Add to cart puts nothing in the cart",
+      "acText": "IF the shopper raises the quantity on the detail screen without tapping Add to cart, THEN the header shall still display no cart badge \u2014 raising the quantity adds nothing to the cart.",
+      "user": "no-auth",
+      "tags": [],
+      "bucket": "Negative",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-2",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-2"
+        }
+      ],
+      "steps": ["Open the product \"Sauce Labs Backpack (red)\"", "Increase the quantity 2 time(s)"]
+    }
+  ]
+}

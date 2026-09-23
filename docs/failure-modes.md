@@ -45,6 +45,23 @@ config or a record that did not match reality, not code that computed the wrong 
 - **Timings, measured 2026-09-21 on API 35:** app reset (terminate + activate + catalog visible) 2.6 s
   median (n=8); UI sign-in 5.1 s median (n=8); a sign-in reaches the catalog 1.2–1.35 s after the tap
   (n=4). These are what the absence window in the login spec is derived from.
+- **Timing, measured 2026-09-23 on API 35:** a tap on "Add to cart" shows the cart badge 0.68–0.70 s
+  later (n=3). The 3 s window in the cart spec's "raising the quantity adds nothing" test is derived
+  from it.
+- **Three screens share one title id.** `productTV` is the catalog's "Products", the product detail's
+  product name and the cart's "My Cart"; `cartBt` is both "Add to cart" and "Proceed To Checkout".
+  Only one screen is in the tree at a time, so each locator counts 1 — and a `waitForDisplayed` on the
+  destination's title passes instantly on the screen you are leaving. Found while scaffolding the cart
+  pages for OR-2, before it broke anything. **Caught by convention only:** `CartPage.open()` waits for
+  the cart list's content-desc, which no other screen has, and the title getters say to assert text,
+  never presence. Nothing enforces it.
+- **A value on screen is not always a value in the tree.** A cart row's colour is an image whose
+  content-desc is the generic "Displays color of selected product"; the colour itself is not readable
+  through Appium. `/refine-ticket` wrote OR-2's AC 7 asking the row to show "its colour" without
+  checking it was readable. Diego's call on 2026-09-23: **do not verify it** — asserting that a swatch
+  exists would look like colour coverage and prove nothing — so the AC and the test dropped it. Caught
+  now by `refine-ticket/references/rubric.md`, which flags an AC asking for a value the tree does not
+  carry before it reaches generation.
 
 ---
 
