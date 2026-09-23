@@ -2,8 +2,9 @@
   "login › no auth › Edge › the lockout message wins over a wrong password for alice@example.com": 7,
   "login › no auth › Negative › a username with no account does not open the catalog": 6,
   "login › no auth › Negative › a wrong password does not open the catalog": 5,
-  "login › no auth › Negative › alice@example.com is rejected as locked out @smoke": 4,
+  "login › no auth › Negative › alice@example.com is rejected as locked out": 9,
   "login › no auth › Negative › an empty password is rejected with \"Enter Password\"": 3,
   "login › no auth › Negative › an empty username is rejected with \"Username is required\"": 2,
-  "login › no auth › Positive › \"Log In\" in the menu opens the login screen with its username, password and Login controls": 1
+  "login › no auth › Positive › \"Log In\" in the menu opens the login screen with its username, password and Login controls": 1,
+  "login › no auth › Positive › bod@example.com logs in and lands on the catalog": 8
 }
