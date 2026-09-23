@@ -57,9 +57,11 @@ config or a record that did not match reality, not code that computed the wrong 
   never presence. Nothing enforces it.
 - **A value on screen is not always a value in the tree.** A cart row's colour is an image whose
   content-desc is the generic "Displays color of selected product"; the colour itself is not readable
-  through Appium. OR-2's refined AC 7 asks the row to show "its colour", so the test can assert that a
-  swatch is present, not which colour it is. `/refine-ticket` wrote the AC without checking the value
-  was readable. **Unmitigated** — surfaced in the OR-2 PR as a reference gap.
+  through Appium. `/refine-ticket` wrote OR-2's AC 7 asking the row to show "its colour" without
+  checking it was readable. Diego's call on 2026-09-23: **do not verify it** — asserting that a swatch
+  exists would look like colour coverage and prove nothing — so the AC and the test dropped it. Caught
+  now by `refine-ticket/references/rubric.md`, which flags an AC asking for a value the tree does not
+  carry before it reaches generation.
 
 ---
 

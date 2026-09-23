@@ -62,15 +62,6 @@ class CartPage {
   async getQuantities(): Promise<string[]> {
     return $$(`id=${PKG}/noTV`).map((e) => e.getText());
   }
-
-  /**
-   * How many rows show a colour swatch. The swatch is an image whose
-   * content-desc is generic ("Displays color of selected product"): the app
-   * exposes no colour value to read, only that a swatch is there.
-   */
-  async getColorSwatchCount(): Promise<number> {
-    return $$('~Displays color of selected product').length;
-  }
 }
 
 // No fixtures in WebdriverIO: Page Objects are singletons.

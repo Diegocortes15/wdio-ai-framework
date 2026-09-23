@@ -2,7 +2,7 @@
   "records": [
     {
       "title": "an empty cart shows no cart badge",
-      "acText": "WHILE the cart is empty, the header shall not display a cart badge — it is absent from the view tree, not showing `0`.",
+      "acText": "WHILE the cart is empty, the header shall not display a cart badge \u2014 it is absent from the view tree, not showing `0`.",
       "user": "no-auth",
       "tags": [],
       "bucket": "Positive",
@@ -70,7 +70,7 @@
     },
     {
       "title": "adding 3 units twice shows a cart badge of 6, accumulating instead of replacing",
-      "acText": "WHEN the shopper taps Add to cart a second time with the quantity at 3, the cart badge shall read `6` — the cart accumulates instead of replacing.",
+      "acText": "WHEN the shopper taps Add to cart a second time with the quantity at 3, the cart badge shall read `6` \u2014 the cart accumulates instead of replacing.",
       "user": "no-auth",
       "tags": [],
       "bucket": "Positive",
@@ -90,8 +90,8 @@
       ]
     },
     {
-      "title": "the cart lists one row for 6 units, with name, unit price, colour and quantity @smoke",
-      "acText": "WHEN the shopper opens the cart holding 6 units of `Sauce Labs Backpack (red)`, the cart shall list exactly one row for it, showing its name, its unit price `$ 29.99`, its colour and the quantity `6`.",
+      "title": "the cart lists one row for 6 units, with name, unit price and quantity @smoke",
+      "acText": "WHEN the shopper opens the cart holding 6 units of `Sauce Labs Backpack (red)`, the cart shall list exactly one row for it, showing its name, its unit price `$ 29.99` and the quantity `6`.",
       "user": "no-auth",
       "tags": ["@smoke"],
       "bucket": "Positive",
@@ -175,7 +175,7 @@
     },
     {
       "title": "raising the quantity without tapping Add to cart puts nothing in the cart",
-      "acText": "IF the shopper raises the quantity on the detail screen without tapping Add to cart, THEN the header shall still display no cart badge — raising the quantity adds nothing to the cart.",
+      "acText": "IF the shopper raises the quantity on the detail screen without tapping Add to cart, THEN the header shall still display no cart badge \u2014 raising the quantity adds nothing to the cart.",
       "user": "no-auth",
       "tags": [],
       "bucket": "Negative",

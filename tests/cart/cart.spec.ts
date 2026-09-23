@@ -54,14 +54,16 @@ describe('cart — no auth', () => {
       await expect(ProductDetailPage.header.cartBadge).toHaveText('6');
     });
 
-    it('the cart lists one row for 6 units, with name, unit price, colour and quantity @smoke', async () => {
+    // The colour is deliberately not asserted: the app exposes no colour value
+    // to read, and Diego decided on 2026-09-23 not to verify it rather than
+    // assert the presence of a swatch, which would prove nothing about colour.
+    it('the cart lists one row for 6 units, with name, unit price and quantity @smoke', async () => {
       await addSixUnits();
       await CartPage.open();
 
       expect(await CartPage.getProductNames()).toEqual([PRODUCT]);
       expect(await CartPage.getUnitPrices()).toEqual(['$ 29.99']);
       expect(await CartPage.getQuantities()).toEqual(['6']);
-      expect(await CartPage.getColorSwatchCount()).toBe(1);
     });
 
     it('the cart totals read "6 Items" and "$ 179.94" for 6 units', async () => {
