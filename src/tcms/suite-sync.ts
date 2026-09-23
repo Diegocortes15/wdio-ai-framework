@@ -1,40 +1,57 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { QaseMap, TcmsSeam, TestRecord } from './types';
+import type { TcmsSeam, TestRecord } from './types';
 import { mapToCase } from './case-mapper';
-import { loadMap, logicalKey, orphanedIds, saveMap } from './map-store';
 import { QaseClient } from './qase-client';
 import { qaseConfig } from './qase-env';
 
 // Catalogue sync, driven by the committed records alone (ADR-0041). The web
 // repository also read a run report here, to attach steps and statuses; this
 // one has no CI run to read — the records carry the steps instead.
+//
+// It keeps no local id store (ADR-0043 supersedes ADR-0041's qase-map.json): for
+// every suite the records cover, it asks the backend what that suite holds and
+// reconciles. A case whose test is gone is removed; a case renamed by hand in the
+// backend is removed and recreated from the records, because the records are the
+// source of truth.
+
+const SEP = ' › ';
 
 export interface SuiteSyncOutcome {
-  synced: string[]; // logical keys upserted
+  synced: string[]; // suite path + title, one per record
   archived: number[]; // case ids removed
-  newMap: QaseMap;
+}
+
+export function logicalKey(suitePath: string[], title: string): string {
+  return [...suitePath, title].join(SEP);
 }
 
 export async function runSuiteSync(
   records: TestRecord[],
-  oldMap: QaseMap,
   seam: TcmsSeam,
 ): Promise<SuiteSyncOutcome> {
-  const outcome: SuiteSyncOutcome = { synced: [], archived: [], newMap: {} };
+  const outcome: SuiteSyncOutcome = { synced: [], archived: [] };
+  // Titles the records want, per suite the records touch.
+  const wanted = new Map<number, Set<string>>();
 
   for (const record of records) {
     const c = mapToCase(record);
-    const key = logicalKey(c.suitePath, c.title);
     const suiteId = await seam.ensureSuitePath(c.suitePath);
-    outcome.newMap[key] = await seam.upsertCase(suiteId, c, oldMap[key]);
-    outcome.synced.push(key);
+    await seam.upsertCase(suiteId, c);
+    outcome.synced.push(logicalKey(c.suitePath, c.title));
+    const titles = wanted.get(suiteId) ?? new Set<string>();
+    titles.add(c.title);
+    wanted.set(suiteId, titles);
   }
 
-  // Remove ONLY cases whose record no longer exists. Records drive existence.
-  for (const id of orphanedIds(oldMap, Object.keys(outcome.newMap))) {
-    await seam.archiveCase(id);
-    outcome.archived.push(id);
+  // Remove only inside the suites the records cover. A suite no record mentions
+  // is left alone: this sync has no opinion about tests it was not given.
+  for (const [suiteId, titles] of wanted) {
+    for (const remote of await seam.listCases(suiteId)) {
+      if (titles.has(remote.title)) continue;
+      await seam.archiveCase(remote.id);
+      outcome.archived.push(remote.id);
+    }
   }
   return outcome;
 }
@@ -68,8 +85,9 @@ export function loadRecords(dir: string): TestRecord[] {
       if (!Array.isArray(r.steps)) {
         throw new Error(`Record "${r.title}" in ${f} is missing its "steps" array`);
       }
-      // Two records with one logical key would overwrite each other's case on every sync.
-      const key = logicalKey([r.feature, r.contextLabel, r.bucket], r.title);
+      // Two records with one logical key would fight over the same case forever.
+      const c = mapToCase(r);
+      const key = logicalKey(c.suitePath, c.title);
       const other = seen.get(key);
       if (other) throw new Error(`Duplicate record "${key}" in ${other} and ${f}`);
       seen.set(key, f);
@@ -86,17 +104,15 @@ async function main(): Promise<void> {
     return;
   }
   const recordsDir = '.tcms/records';
-  const mapPath = 'qase-map.json';
   const records = loadRecords(recordsDir);
-  const oldMap = loadMap(mapPath);
-  // With no records, every mapped case would count as orphaned and be removed. That is far
-  // more likely a missing directory or a bad checkout than a deliberate deletion of the suite.
+  // With no records every case in every touched suite would count as orphaned —
+  // and no suite is touched, so nothing would happen anyway. Say so and stop:
+  // an empty records directory is far more likely a bad checkout than a deletion.
   if (records.length === 0) {
     console.log(`No records under ${recordsDir} — nothing to sync, nothing removed.`);
     return;
   }
-  const outcome = await runSuiteSync(records, oldMap, new QaseClient(cfg));
-  saveMap(mapPath, outcome.newMap);
+  const outcome = await runSuiteSync(records, new QaseClient(cfg));
   console.log(
     `Qase suite sync: ${outcome.synced.length} synced, ${outcome.archived.length} removed.`,
   );

@@ -51,7 +51,7 @@ exploration session. How to use it: `wdio-conventions.md`.
 | App reset before each test              | `src/hooks/reset-app.ts` (Mocha root hook)                          |
 | Expected failure (ADR-0024)             | `itFails` in `src/utils/expected-failure.ts`                        |
 | Named steps (`test.step`)               | `step` in `src/utils/step.ts`; run records in `test-results/steps/` |
-| Qase catalogue sync                     | `src/tcms/`, `.tcms/records/`, `qase-map.json` (ADR-0041)           |
+| Qase catalogue sync                     | `src/tcms/`, `.tcms/records/` (ADR-0041, ADR-0043)                  |
 | APK, Appium server log                  | `apps/`, `logs/` — both gitignored                                  |
 | Skills                                  | `.claude/skills/<name>/`                                            |
 | What broke here, and the thesis numbers | `docs/failure-modes.md`                                             |

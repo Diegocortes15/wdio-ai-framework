@@ -1,4 +1,4 @@
-import type { TcmsSeam, TcmsCase } from './types';
+import type { RemoteCase, TcmsSeam, TcmsCase } from './types';
 import type { QaseConfig } from './qase-env';
 
 interface Entity {
@@ -7,6 +7,9 @@ interface Entity {
   parent_id?: number | null;
   suite_id?: number | null;
 }
+
+// Qase caps a listing at 100 per request.
+const PAGE = 100;
 interface ListResp {
   result: { entities: Entity[] };
 }
@@ -33,7 +36,6 @@ export class QaseHttpError extends Error {
 }
 
 const RATE_LIMITED = 429;
-const NOT_FOUND = 404;
 const MAX_RETRIES = 3;
 
 export class QaseClient implements TcmsSeam {
@@ -109,25 +111,24 @@ export class QaseClient implements TcmsSeam {
     return created.result.id;
   }
 
-  async upsertCase(suiteId: number, c: TcmsCase, knownId?: number): Promise<number> {
-    const body = this.caseBody(suiteId, c);
-
-    // The committed qase-map.json already says which case this test is. Updating it directly
-    // skips the find-by-title search, which was 80 of the 182 calls a full sync made.
-    //
-    // A stale id is handled rather than assumed away: if the case was deleted or archived in
-    // Qase by hand, the update 404s and this falls through to the search-and-create path
-    // below — the same answer the old code gave, one extra call later, and only in that case.
-    if (knownId !== undefined) {
-      try {
-        await this.rpc('PATCH', `/case/${this.cfg.projectCode}/${knownId}`, body);
-        return knownId;
-      } catch (err) {
-        if (!(err instanceof QaseHttpError) || err.status !== NOT_FOUND) throw err;
-        console.log(`Qase case ${knownId} is gone — falling back to search for "${c.title}"`);
+  async listCases(suiteId: number): Promise<RemoteCase[]> {
+    const code = this.cfg.projectCode;
+    const found: RemoteCase[] = [];
+    // Paginated rather than filtered server-side: the suite_id filter's spelling is
+    // not something to guess at, and every entity carries its own suite_id.
+    for (let offset = 0; ; offset += PAGE) {
+      const q = new URLSearchParams({ limit: String(PAGE), offset: String(offset) });
+      const page = await this.rpc<ListResp>('GET', `/case/${code}?${q}`);
+      const entities = page.result.entities;
+      for (const e of entities) {
+        if (e.suite_id === suiteId) found.push({ id: e.id, title: e.title });
       }
+      if (entities.length < PAGE) return found;
     }
-    return this.findOrCreateCase(suiteId, c, body);
+  }
+
+  async upsertCase(suiteId: number, c: TcmsCase): Promise<number> {
+    return this.findOrCreateCase(suiteId, c, this.caseBody(suiteId, c));
   }
 
   private async findOrCreateCase(

@@ -51,11 +51,12 @@ Write it exactly when the spec uses `itFails` — which, per `fix-loop.md`, is o
 
 ## What the merge-time sync does (`src/tcms/suite-sync.ts`, run by CI)
 
-- Reads **all** `.tcms/records/*.json` and the committed `qase-map.json`.
+- Reads **all** `.tcms/records/*.json`. It keeps **no local id store** (ADR-0043): for every suite the records cover, it asks Qase what that suite holds and reconciles against it.
 - One Qase case per logical test under **`feature › context › bucket`**, marked **automated**; steps from the record's `steps`, with the AC text as the last step's expected result.
-- **No hand-written case ids.** A test's identity is its `feature › context › bucket › title`, with trailing tags stripped — so tagging or untagging a test updates its case instead of replacing it. The first sync finds the case by title (or creates it) and records its id in `qase-map.json`, which later syncs use to update it directly. The bot commits the refreshed map back to `main`.
-- **Removes** every mapped case whose record no longer exists — a test deleted from the suite, with its record, disappears from Qase at the next sync. It refuses to remove anything when there are no records at all, which is more likely a broken checkout than a deleted suite.
-- **Renaming a test, or moving it to another bucket, is a new case**: the old one is removed with its history and a new one is created. Rename deliberately. Adding or removing a tag is **not** a rename.
+- **No hand-written case ids.** A test's identity is its `feature › context › bucket › title`, with trailing tags stripped — so tagging or untagging a test updates its case instead of replacing it. Each sync finds the case by title within its suite, or creates it.
+- **Removes** every case in a covered suite that no record describes — a test deleted from the suite, with its record, disappears from Qase at the next sync. A suite no record mentions is left alone, and with no records at all nothing is removed: that is a broken checkout far more often than a deleted suite.
+- **The records are the source of truth; Qase is a mirror.** A case edited by hand in Qase is reconciled away — rename one there and the next sync removes it and recreates it from the records. Rename the test, not the case.
+- **Renaming a test, or moving it to another bucket, replaces its case**: the old one goes with its history and a new one is created. Rename deliberately. Adding or removing a tag is **not** a rename.
 
 Mapping lives in `src/tcms/case-mapper.ts` + `suite-sync.ts` — do not re-derive.
 

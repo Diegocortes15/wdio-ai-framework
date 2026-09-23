@@ -51,15 +51,18 @@ export interface TestRecord {
   expectedFailure?: ExpectedFailure;
 }
 
-// The seam every TCMS backend implements. qase-client.ts is the first impl.
-export interface TcmsSeam {
-  ensureSuitePath(path: string[]): Promise<number>; // create-as-needed → leaf suite id
-  // `knownId` comes from the committed qase-map.json; when given, the case is updated
-  // directly and the find-by-title search is skipped.
-  upsertCase(suiteId: number, c: TcmsCase, knownId?: number): Promise<number>;
-  archiveCase(caseId: number): Promise<void>; // remove a case whose test was removed
+// A case as the backend holds it, for reconciling a suite against the records.
+export interface RemoteCase {
+  id: number;
+  title: string;
 }
 
-// qase-map.json shape: logical test key → Qase case id. Written by suite-sync,
-// read by humans as a test ↔ case index. Never hand-edited.
-export type QaseMap = Record<string, number>;
+// The seam every TCMS backend implements. qase-client.ts is the first impl.
+// There is no local id store (ADR-0043): the sync asks the backend what it holds
+// in the suites the records cover, and reconciles against that.
+export interface TcmsSeam {
+  ensureSuitePath(path: string[]): Promise<number>; // create-as-needed → leaf suite id
+  listCases(suiteId: number): Promise<RemoteCase[]>; // what the backend holds in one suite
+  upsertCase(suiteId: number, c: TcmsCase): Promise<number>; // find-by-title, or create
+  archiveCase(caseId: number): Promise<void>; // remove a case whose test was removed
+}

@@ -28,8 +28,18 @@ Each of these happened during the port, was found, and has something that catche
 | **A tree read mid-transition.** `get_elements` right after a tap returned two root containers, which reads exactly like "the element does not exist"                                                                                                               | A real run reported it; a screenshot proved the screen was correct                         | `wdio-conventions.md` requires polling `get_elements` until an element of the destination screen appears, and a screenshot before concluding anything             |
 | **A claim taken from a README instead of the installed code.** This repository's own skill said `get_elements` filters to the viewport by default, quoting the tool's README; the installed 3.13.0 schema says the opposite                                        | Found while writing the rule, before it misled anyone                                      | The rule now says to pass both flags explicitly and not to trust the default. **Nothing enforces this** — the honest answer is "read the installed schema"        |
 
+| **A branch rule that rejected a bot's push.** The Qase sync committed a refreshed `qase-map.json` straight to `main`. A ruleset requiring pull requests then rejected it (`GH013 … Changes must be made through a pull request`), so **every merge left the sync job red** while Qase itself was perfectly in sync | The job failed minutes after the OR-2 merge | The sync keeps no local state and the workflow has `contents: read` (ADR-0043). There is nothing left to push, so the rule and the job no longer disagree |
+
 The pattern worth naming, and it is the web repo's pattern again: **most of these were a rule, a
 config or a record that did not match reality, not code that computed the wrong answer.**
+
+The bot-push one is worth a second look, because the first three fixes we reached for were all wrong:
+a bypass for the `github-actions` app **cannot exist on a user-owned repository** (the API refuses it,
+and a bypass by repository role does not apply to `GITHUB_TOKEN` — measured, rejected twice); a PAT in
+secrets would have opened a wider hole than the rule closed; and weakening the ruleset would have
+deleted the check that had already caught a real failure. **The workflow was written when `main` was
+open, and it assumed it always would be.** When a rule and a job disagree, the job is usually the one
+making the assumption.
 
 ---
 
