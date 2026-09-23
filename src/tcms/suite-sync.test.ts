@@ -3,7 +3,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { mapToCase } from './case-mapper';
+import { caseTitle, mapToCase } from './case-mapper';
 import { loadRecords, runSuiteSync } from './suite-sync';
 import type { TcmsCase, TcmsSeam, TestRecord } from './types';
 
@@ -118,4 +118,40 @@ test('loadRecords rejects two records with the same logical key', () => {
 
 test('loadRecords returns nothing for a missing directory', () => {
   assert.deepEqual(loadRecords(join(tmpdir(), 'does-not-exist-records')), []);
+});
+
+test('a trailing tag is stripped from the case title, and an email at the end is not', () => {
+  assert.equal(
+    caseTitle('alice@example.com is rejected as locked out @smoke'),
+    'alice@example.com is rejected as locked out',
+  );
+  assert.equal(
+    caseTitle('bod@example.com logs in and lands on the catalog @smoke'),
+    'bod@example.com logs in and lands on the catalog',
+  );
+  // A title may END with an email — it must survive untouched.
+  assert.equal(
+    caseTitle('the lockout message wins over a wrong password for alice@example.com'),
+    'the lockout message wins over a wrong password for alice@example.com',
+  );
+  assert.equal(caseTitle('no tags here'), 'no tags here');
+});
+
+test('tags reach Qase as labels, without the grep @', () => {
+  const c = mapToCase(record('a @smoke', { tags: ['@smoke'] }));
+  assert.equal(c.title, 'a');
+  assert.deepEqual(c.tags, ['smoke']);
+});
+
+test('tagging a test does not change its case identity', async () => {
+  const seam = new FakeSeam();
+  // The same test, once untagged and once tagged: the tagged run must UPDATE case 7, not create one.
+  const out = await runSuiteSync(
+    [record('a @smoke', { tags: ['@smoke'] })],
+    { [KEY('a')]: 7 },
+    seam,
+  );
+  assert.deepEqual(seam.upserts, [{ title: 'a', knownId: 7 }]);
+  assert.deepEqual(seam.archived, []);
+  assert.deepEqual(out.newMap, { [KEY('a')]: 7 });
 });

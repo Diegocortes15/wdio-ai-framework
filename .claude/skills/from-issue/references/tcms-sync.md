@@ -28,7 +28,7 @@ One object per generated test, from the Step 6 model:
 }
 ```
 
-- **`title`** is the spec's `it(...)` title as written. For an `itFails` test, it is the title passed to `itFails` — without the `[expected failure: …]` suffix the helper adds at run time.
+- **`title`** is the spec's `it(...)` title as written, tags included — it is how a reader finds the test in the repository. For an `itFails` test, it is the title passed to `itFails`, without the `[expected failure: …]` suffix the helper adds at run time. **The sync strips trailing tags from the Qase case title** and sends them as Qase tags, so the case reads as prose and `@smoke` is a label you can filter on.
 - **`steps`** are copied from the test's run record under `test-results/steps/` (written by Step 10's target-spec run): the `title` of each entry in its `steps` array, in order. **Never invent them** — if the run record is missing, write `[]` and say so in the PR body; the sync then gives the case a single generic step.
 - **`user`** is the account the test **enters in the login form**, whether or not the app lets it in — a rejection test (wrong password, locked-out account) names the account it tried. It is `no-auth` only when the test enters no account at all: it never touches the login form, or it submits the username empty.
 - **`jira`** lists the ticket(s) **this** test traces to — usually just the one you're working.
@@ -53,9 +53,9 @@ Write it exactly when the spec uses `itFails` — which, per `fix-loop.md`, is o
 
 - Reads **all** `.tcms/records/*.json` and the committed `qase-map.json`.
 - One Qase case per logical test under **`feature › context › bucket`**, marked **automated**; steps from the record's `steps`, with the AC text as the last step's expected result.
-- **No hand-written case ids.** A test's identity is its `feature › context › bucket › title`. The first sync finds the case by title (or creates it) and records its id in `qase-map.json`, which later syncs use to update it directly. The bot commits the refreshed map back to `main`.
+- **No hand-written case ids.** A test's identity is its `feature › context › bucket › title`, with trailing tags stripped — so tagging or untagging a test updates its case instead of replacing it. The first sync finds the case by title (or creates it) and records its id in `qase-map.json`, which later syncs use to update it directly. The bot commits the refreshed map back to `main`.
 - **Removes** every mapped case whose record no longer exists — a test deleted from the suite, with its record, disappears from Qase at the next sync. It refuses to remove anything when there are no records at all, which is more likely a broken checkout than a deleted suite.
-- **Renaming a test, or moving it to another bucket, is a new case**: the old one is removed with its history and a new one is created. Rename deliberately.
+- **Renaming a test, or moving it to another bucket, is a new case**: the old one is removed with its history and a new one is created. Rename deliberately. Adding or removing a tag is **not** a rename.
 
 Mapping lives in `src/tcms/case-mapper.ts` + `suite-sync.ts` — do not re-derive.
 

@@ -157,6 +157,7 @@ export class QaseClient implements TcmsSeam {
       preconditions: c.preconditions,
       automation: 2, // 2 = "automated" (Qase integer enum: 0=not automated, 1=to be automated, 2=automated)
       steps_type: 'classic',
+      tags: c.tags,
       steps: c.steps.map((s, i) => ({
         position: i + 1,
         action: s.action,
