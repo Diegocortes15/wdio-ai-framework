@@ -56,6 +56,9 @@ ADR-0019 grep           clean
 Known debt              5 rules stated only by reference to a CLAUDE.md that does not exist here
 ```
 
+What broke during the port, what catches it now, and the running measurement of the thesis:
+`docs/failure-modes.md`. Add to it when something breaks.
+
 `playwright-cli` was deliberately **not** ported — it is Playwright-specific.
 `@wdio/mcp` (v3.13.0, depends on `webdriverio ^9.27`, no version conflict with
 `@wdio/cli` 9.31) replaces it for live app exploration.

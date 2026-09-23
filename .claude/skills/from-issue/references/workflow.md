@@ -503,6 +503,12 @@ It carries exactly three things, and nothing that already has a channel elsewher
    you had to improvise. **Name the file that should have covered it.** This is the only
    signal that says what is stopping the skill from working as it should.
 
+**An obstacle that will outlive this run also goes into the repository's record**, in the same
+change as the work: the failure-modes page if the repository keeps one (this one keeps
+`docs/failure-modes.md`), and — when the lesson changes how work is done — into the reference
+that should have covered it, a lint rule, or a CI check. A reference gap reported in a PR body
+and nowhere else is a lesson the next run pays for again.
+
 Do NOT restate what is already reported: ticket inferences belong in the assumptions
 block, failed runs in the fix log, and collisions / harness growth / skipped ACs in their
 own notes.

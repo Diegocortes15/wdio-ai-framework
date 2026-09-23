@@ -37,30 +37,27 @@ the `package.json` of the working directory.
 
 ## Inspecting the live app
 
-The `wdio-mcp` MCP server (`@wdio/mcp`, pinned, in `.mcp.json`) drives the app for selector discovery. It needs
-its own Appium: `npm run appium:explore` (127.0.0.1:4725; the test run's Appium uses 4723). Running the suite
-kills an open exploration session — start a new one after. How to use it: `wdio-conventions.md`.
+The `wdio-mcp` MCP server (`@wdio/mcp`, pinned, in `.mcp.json`) drives the app for selector discovery, over its
+own Appium: `npm run appium:explore` (127.0.0.1:4725; the test run uses 4723). Running the suite kills an open
+exploration session. How to use it: `wdio-conventions.md`.
 
 ## Where things live
 
-| What                        | Where                                                               |
-| --------------------------- | ------------------------------------------------------------------- |
-| Page Objects                | `src/pages/` — exported as singletons                               |
-| Components                  | `src/components/`                                                   |
-| Specs                       | `tests/<feature>/*.spec.ts`                                         |
-| Test data                   | `data/` — inline in the spec is the default                         |
-| WDIO config (Android)       | `wdio.android.conf.ts`                                              |
-| App reset before each test  | `src/hooks/reset-app.ts` (Mocha root hook)                          |
-| Expected failure (ADR-0024) | `itFails` in `src/utils/expected-failure.ts`                        |
-| Named steps (`test.step`)   | `step` in `src/utils/step.ts`; run records in `test-results/steps/` |
-| Qase catalogue sync         | `src/tcms/`, `.tcms/records/`, `qase-map.json` (ADR-0041)           |
-| App under test (the APK)    | `apps/` — gitignored                                                |
-| Appium server log           | `logs/` — gitignored                                                |
-| Skills                      | `.claude/skills/<name>/`                                            |
+| What                                    | Where                                                               |
+| --------------------------------------- | ------------------------------------------------------------------- |
+| Page Objects, Components                | `src/pages/` (singletons), `src/components/`                        |
+| Specs                                   | `tests/<feature>/*.spec.ts`                                         |
+| WDIO config (Android)                   | `wdio.android.conf.ts`                                              |
+| App reset before each test              | `src/hooks/reset-app.ts` (Mocha root hook)                          |
+| Expected failure (ADR-0024)             | `itFails` in `src/utils/expected-failure.ts`                        |
+| Named steps (`test.step`)               | `step` in `src/utils/step.ts`; run records in `test-results/steps/` |
+| Qase catalogue sync                     | `src/tcms/`, `.tcms/records/`, `qase-map.json` (ADR-0041)           |
+| APK, Appium server log                  | `apps/`, `logs/` — both gitignored                                  |
+| Skills                                  | `.claude/skills/<name>/`                                            |
+| What broke here, and the thesis numbers | `docs/failure-modes.md`                                             |
 
-There is **no fixture layer**: tests import Page Objects directly (`import LoginPage from '@pages/LoginPage'`)
-and use the WDIO globals (`$`, `driver`, `expect`). Aliases `@data/*`, `@pages/*`, `@components/*`,
-`@utils/*` map to `data/`, `src/pages/`, `src/components/`, `src/utils/` (`tsconfig.json`).
+There is **no fixture layer**: tests import Page Objects directly and use the WDIO globals (`$`, `driver`,
+`expect`). `@data/*`, `@pages/*`, `@components/*`, `@utils/*` map to `data/`, `src/…` (`tsconfig.json`).
 
 ## Composition rules (must follow)
 
@@ -75,32 +72,36 @@ and use the WDIO globals (`$`, `driver`, `expect`). Aliases `@data/*`, `@pages/*
 9. A Component scoped to one of many similar elements takes a discriminator.
 10. Refactor a page-direct locator into a Component the moment a second page needs it.
 11. Component nesting depth ≤ 2.
-12. No fixed sleeps — see "What to NEVER do".
 
 ## Selectors
 
-Order: `~accessibility id` → `id=` → `UiSelector` / predicate string → class chain. **Only XPath is a build
-gate**. `$()` returns the first match silently — count matches first (`wdio-conventions.md`).
+Order: `~accessibility id` → `id=` → `UiSelector` / predicate string → class chain. **Only XPath is a build gate**. `$()` returns the first match silently — count matches first (`wdio-conventions.md`).
 
 ## Session strategy
 
-**Every test starts from a fresh app process** (ADR-0040): the root hook terminates and relaunches the
-app, so each test begins on the catalog, logged out, with an empty cart. A test that needs a session logs
-in through `LoginPage` as its own setup. Never share state between tests, and never assume test order.
+**Every test starts from a fresh app process** (ADR-0040): the root hook relaunches the app, so each test
+begins on the catalog, logged out, with an empty cart. A test that needs a session logs in through
+`LoginPage` itself. Never share state between tests, and never assume test order.
 
 ## Tag conventions
 
-`@smoke` is the only tag. Mocha has no tag option, so it goes at the **end of the test title** —
-`npm run test:smoke` greps titles. The web repository's **routing** tags
-(`@no-auth`, one tag per user) chose which pre-authenticated project ran a test; here every test starts
-logged out and logs in itself, so there is nothing to route. Do not add routing tags.
+`@smoke` is the only tag, at the **end of the test title** — Mocha has no tag option and
+`npm run test:smoke` greps titles. No routing tags: every test starts logged out and logs in itself.
+
+## Recording what we learn
+
+When something breaks, a workflow needs correcting, or a measurement contradicts a doc, the **same change**
+adds it to `docs/failure-modes.md`: what broke, how it surfaced, what catches it now. **Do it without being
+asked** — this repository's value is its record of why things are the way they are. A lesson that changes how
+work is done also goes where that work happens: into the skill that performs it, into lint or CI, or here.
+A lesson with a gate beats a lesson in prose.
 
 ## Custom skills
 
 `/refine-ticket`, `/from-issue`, `/scaffold-page-object`, `/report-bug` — copied verbatim from the web
-repository, then adapted where they broke. `/from-issue` and `/refine-ticket` are adapted;
-`/scaffold-page-object` and `/report-bug` still assume Playwright. **Every line changed in a skill is the
-cost the thesis measures**: change one only on purpose, and say so in the PR body.
+repository, then adapted where they broke. The first two are adapted; the other two still assume
+Playwright. **Every line changed in a skill is the cost the thesis measures**: change one on purpose, and
+say so in the PR body.
 
 **A skill directory is the portability boundary** (ADR-0019). No markdown link inside a skill may resolve
 outside it: cite ADRs as plain text, write repository paths as backticked prose, reference a sibling skill
@@ -122,10 +123,9 @@ grep -rn "](\.\./\|](/\|](docs/\|](src/\|](tests/\|](data/" .claude/skills/
 
 ## ADRs
 
-- Mobile records live in `docs/adr/`. The inherited ones the skills cite as plain text (ADR-0001, 0019,
-  0020, 0022, 0030…) live in the web repository under `docs/adr/`.
-- Inherited decisions keep their inherited numbers. New mobile decisions start at **0040**. Never
-  renumber: nothing validates the citations, so renumbering repoints them silently.
+- Mobile records live in `docs/adr/`; the inherited ones the skills cite as plain text (ADR-0001, 0019,
+  0020, 0022, 0030…) live in the web repository. Inherited numbers are kept and mobile records start at
+  **0040** — renumbering would silently repoint citations nothing validates.
 - Append-only: never edit an accepted record, supersede it. Every record declares **`Enforced by:`** —
   the lint rule, test or script that makes it true, or `Nothing — prose only`.
 
