@@ -7,15 +7,20 @@
     "node": "22.x"
   },
   "scripts": {
-    "test": "wdio run ./wdio.android.conf.ts",
-    "test:smoke": "wdio run ./wdio.android.conf.ts --mochaOpts.grep @smoke",
+    "test": "npm run test:android && npm run test:ios",
+    "test:android": "wdio run ./config/wdio.android.conf.ts",
+    "test:ios": "wdio run ./config/wdio.ios.conf.ts",
+    "test:smoke": "npm run test:smoke:android && npm run test:smoke:ios",
+    "test:smoke:android": "wdio run ./config/wdio.android.conf.ts --mochaOpts.grep @smoke",
+    "test:smoke:ios": "wdio run ./config/wdio.ios.conf.ts --mochaOpts.grep @smoke",
+    "test:unit": "tsx --test src/tcms/*.test.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "emulator": "bash scripts/start-emulator.sh",
-    "test:unit": "tsx --test src/tcms/*.test.ts",
+    "simulator": "bash scripts/start-simulator.sh",
     "tcms:sync": "tsx src/tcms/suite-sync.ts",
     "appium:explore": "appium --address 127.0.0.1 --port 4725"
   },

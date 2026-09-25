@@ -85,6 +85,11 @@ export function loadRecords(dir: string): TestRecord[] {
       if (!Array.isArray(r.steps)) {
         throw new Error(`Record "${r.title}" in ${f} is missing its "steps" array`);
       }
+      // Which platforms a test covers is part of the catalogue (ADR-0044): a
+      // record without it would publish a case that claims to cover both.
+      if (!Array.isArray(r.platforms) || r.platforms.length === 0) {
+        throw new Error(`Record "${r.title}" in ${f} is missing a non-empty "platforms" array`);
+      }
       // Two records with one logical key would fight over the same case forever.
       const c = mapToCase(r);
       const key = logicalKey(c.suitePath, c.title);

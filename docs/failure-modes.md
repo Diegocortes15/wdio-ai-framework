@@ -33,6 +33,9 @@ Each of these happened during the port, was found, and has something that catche
 | **An accessibility id that lies about state.** iOS's More menu exposes `LogOut-menu-item` both logged out and logged in; only the visible label switches between "Log Out" and "Login" | Checking that a relaunch clears the session: the id was there in both states, so the check proved nothing | Session state is read from the label, never from that id's presence. An id names a widget, not a state (ADR-0044) |
 | **A screen already inside another screen's page source.** On iOS the catalog's source carries the empty-cart view (`No Items`, `Go Shopping`) while the catalog is what is on screen | Dumping the catalog while hunting for the cart's anchors | An existence assertion is not a screen assertion: cart checks are scoped to `~Cart-screen`, and arrival is polled on the destination's own anchor |
 | **A driver error that named nothing.** The first XCUITest session failed with a bare "code 70". Xcode 16.2 ships only the iPhoneSimulator18.2 SDK, and the machine had only the iOS 17.5 runtime installed | `xcodebuild -showdestinations`, run by hand, returned a placeholder saying "iOS 18.2 is not installed" — which the driver never said | `xcodebuild -downloadPlatform iOS` (iOS 18.3, 8.72 GB) fixed it, and brief §4 no longer claims this machine needs nothing. **Unenforced:** the rule is to run the underlying tool by hand when a driver reports only a number |
+| **A config path that moved with its file.** Moving the WDIO config into `config/` broke the Mocha root hook: `mochaOpts.require: ['./src/hooks/reset-app.ts']` is resolved relative to the CONFIG FILE, so Mocha looked for `config/src/hooks/…` and every worker died before the first test | The first run after the move, with a `Cannot find module` naming the impossible path | The path is `../src/…`, and `wdio.shared.conf.ts` states which options are config-relative (`specs`, `suites`, `mochaOpts.require`) and which are resolved against the working directory |
+| **A predicate pattern that matched nothing.** The iOS cart total was addressed with `name MATCHES "\$[0-9]+\.[0-9][0-9]"`. `$` is the predicate language's variable marker, so the pattern found no element at all — not a wrong one, none | The first iOS run of the cart spec: one failing test out of nineteen | The pattern avoids `$` entirely (`[^ ]+[.][0-9][0-9]`, which also separates the total from a row's `$ 29.99` by the space), and `wdio-conventions.md` lists it with the other iOS traps. **Unenforced** — it is a rule in prose |
+| **Credentials that can be typed but not submitted.** On iOS the keyboard covers the login screen's submit button, and this build dismisses it for nothing: `mobile: hideKeyboard` errors, the Return key, a tap on another element, a swipe and `mobile: scroll` all leave it up. Six rejected-credential tests cannot exist there | Measured while porting the login spec — five dismissal strategies, each tried and logged | Those tests are `itOn('android', …)` with that reason, printed in the report. `LoginPage.loginAs` throws on iOS when asked for a password other than the listed one, instead of signing in with a password the caller did not ask for |
 | **A branch rule that rejected a bot's push.** The Qase sync committed a refreshed `qase-map.json` straight to `main`. A ruleset requiring pull requests then rejected it (`GH013 … Changes must be made through a pull request`), so **every merge left the sync job red** while Qase itself was perfectly in sync | The job failed minutes after the OR-2 merge | The sync keeps no local state and the workflow has `contents: read` (ADR-0043). There is nothing left to push, so the rule and the job no longer disagree |
 
 The pattern worth naming, and it is the web repo's pattern again: **most of these were a rule, a
@@ -88,6 +91,13 @@ making the assumption.
   `XCUIElementTypeSecureTextField`, both unnamed, and a submit `Button` named `Login` — the same name
   as the screen title's `StaticText`, so it needs a predicate on type to be unambiguous. Tapping a
   username chip fills both fields at once, which Android has no equivalent of.
+
+- **The two builds do not agree on behaviour.** `alice@example.com` is locked out on Android and signs
+  in on iOS 2.2.2 (measured 2026-09-25). A cross-platform suite therefore cannot assume that an AC
+  written from one app holds on the other — and the difference is a finding to report, not a test to
+  adjust (ADR-0030).
+- **iOS submits the login form only through the account chips.** Tapping a listed username fills both
+  fields without raising the keyboard, which is the one path that leaves the submit button reachable.
 
 ---
 

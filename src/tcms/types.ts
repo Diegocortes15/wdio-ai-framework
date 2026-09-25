@@ -19,6 +19,11 @@ export interface TcmsStep {
   expected: string; // '' when the step has no specific expected result
 }
 
+// Which platforms a test runs on (ADR-0044). Qase carries this as a case tag;
+// per-platform RESULTS would want Qase configurations, and this pipeline syncs
+// a catalogue, not runs (ADR-0041, ADR-0043).
+export type TcmsPlatform = 'android' | 'ios';
+
 export interface TcmsCase {
   suitePath: string[]; // e.g. ['login', 'no auth', 'Negative'] — the suite tree
   title: string; // the test title — the case title within the leaf suite
@@ -48,6 +53,10 @@ export interface TestRecord {
   // The step titles the test ran, copied from its run record when /from-issue
   // executed it. The catalogue sync has no run of its own to read them from.
   steps: string[];
+  // Non-empty. A test on one platform only also carries the reason, so the
+  // catalogue can be audited without opening the spec.
+  platforms: TcmsPlatform[];
+  platformNote?: string;
   expectedFailure?: ExpectedFailure;
 }
 

@@ -23,8 +23,9 @@ export function mapToCase(record: TestRecord): TcmsCase {
       record.user === 'no-auth'
         ? 'Starts logged out, on the app launch screen'
         : `Starts logged out; signs in as ${record.user}`,
-    // Qase tags are plain labels; the leading @ is a Mocha-grep artifact.
-    tags: record.tags.map((t) => t.replace(/^@/, '')),
+    // Qase tags are plain labels; the leading @ is a Mocha-grep artifact. The
+    // platforms join them, so a filter in Qase answers "what does iOS cover".
+    tags: [...record.tags.map((t) => t.replace(/^@/, '')), ...record.platforms],
   };
 }
 
@@ -32,6 +33,10 @@ export function mapToCase(record: TestRecord): TcmsCase {
 // to when there is one, then the AC text.
 function buildDescription(record: TestRecord): string {
   const lines = record.jira.map((j) => `Covers Jira ${j.key} — ${j.url}`);
+  if (record.platforms.length === 1) {
+    const note = record.platformNote ? `: ${record.platformNote}` : '';
+    lines.push(`Runs on ${record.platforms[0]} only${note}`);
+  }
   if (record.expectedFailure) {
     const d = record.expectedFailure;
     lines.push(`Expected failure — locked to ${d.key} (${d.url}): ${d.reason}`);

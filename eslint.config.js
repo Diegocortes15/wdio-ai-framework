@@ -34,4 +34,26 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    // A spec never branches by platform (ADR-0044). The difference belongs in
+    // the Page Object (byPlatform), in the data, or — when the behaviour does
+    // not exist at all on the other platform — in itOn(), which says why.
+    // Only the runner and the object model know the platform; the test does not.
+    files: ['tests/**/*.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "MemberExpression[object.name='driver'][property.name=/^is(Android|IOS)$/]",
+          message:
+            'A spec never branches by platform. Put the difference in the Page Object (byPlatform) or in the data, or declare the test with itOn(platform, reason, …).',
+        },
+        {
+          selector: "CallExpression[callee.name='byPlatform']",
+          message:
+            'byPlatform belongs in a Page Object, a Component or the data — not in a spec. A test knows Pages and Data only.',
+        },
+      ],
+    },
+  },
 );
