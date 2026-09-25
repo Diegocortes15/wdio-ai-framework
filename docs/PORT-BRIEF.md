@@ -78,13 +78,16 @@ counterpart to the web project's `SW` — STORMWIND. Three tickets are written:
 
 ---
 
-## 4. Environment — measured 2026-09-18
+## 4. Environment — measured 2026-09-18, iOS half corrected 2026-09-24
 
-Already installed on this machine, nothing to add:
+Already installed on this machine:
 
 - Android SDK at `~/Library/Android/sdk`, AVD **`Medium_Phone_API_35`**,
   system image `android-35/google_apis_playstore/arm64-v8a`
-- Xcode 16.2, iOS 17.5 runtime, iPhone 15 simulators
+- Xcode 16.2, iOS 17.5 runtime, iPhone 15 simulators — **not enough, corrected 2026-09-24**: Xcode
+  16.2 ships only the iPhoneSimulator18.2 SDK, so a session against the 17.5 runtime failed with a
+  bare "code 70". `xcodebuild -downloadPlatform iOS` (iOS 18.3, 8.72 GB) is required, and the
+  measurements below were taken on an iPhone 16 / iOS 18.3 simulator
 - JDK 11 — the UiAutomator2 driver needs Java 9+ for SDK 30+, so this is fine
 
 Needed in the shell (not set by default on this machine):
@@ -150,15 +153,31 @@ Appium's own docs name sibling navigation as XPath's legitimate niche. On Androi
    `//ViewGroup[.//TextView[@text="…"]]//ImageView` — returns **6 matches** and
    nothing warns you. Slower _and_ easier to get silently wrong.
 
-**On iOS** (phase 4): `accessibilityIdentifier` appears **0 times** in
-`saucelabs/my-demo-app-ios` source. The search index was validated before trusting
-that zero (`import`=43, `UIKit`=31, `SwiftUI`=0 — it is UIKit + storyboards). This
-does **not** force XPath: `-ios predicate string` matches on `label`, `value`,
-`name` and `type` without any identifier, in the fastest tier, and `-ios class
-chain` covers hierarchy. Per Appium docs XPath is up to **10x** slower on XCUITest.
+**On iOS — corrected 2026-09-25 against a running app.** The original entry read:
+`accessibilityIdentifier` appears **0 times** in `saucelabs/my-demo-app-ios`
+source (a search index validated before trusting that zero: `import`=43,
+`UIKit`=31, `SwiftUI`=0 — it is UIKit + storyboards), so iOS would have to be
+driven by `-ios predicate string` on `label`, `value`, `name` and `type`.
 
-Caveat: the iOS figure is source-code search, not a runtime accessibility tree.
-Confirm with a page source dump before deciding anything for iOS.
+**The count was right and the conclusion was wrong.** A page source dump of the
+running app (iPhone 16, iOS 18.3, app 2.2.2) is full of accessibility ids —
+`~Catalog-screen`, `~ProductDetails-screen`, `~Cart-screen`, `~AddToCart`,
+`~AddPlus Icons`, `~SubtractMinus Icons`, `~ProceedToCheckout`,
+`~Catalog-tab-item`. A UIKit app sets them in its storyboards, which a search of
+`.swift` files cannot see. **Level 1 is available on iOS**, and the order above
+holds unchanged on both platforms.
+
+Two iOS-specific traps the dump also produced, both recorded in
+`docs/failure-modes.md`: an element the app draws can carry `visible="false"`
+(the cart badge, and the tab bar's own labels), and a screen's elements can sit
+in the page source while another screen is displayed — so on iOS, existence is
+even weaker evidence than on Android. Where an id is missing (the login inputs),
+`-ios predicate string` and `-ios class chain` cover it; per Appium's docs XPath
+is up to **10x** slower on XCUITest, and it stays forbidden.
+
+The lesson is the caveat this section already carried — "confirm with a page
+source dump before deciding anything for iOS". It was written, and then the
+conclusion above it got quoted for three weeks as if it were measured.
 
 ---
 

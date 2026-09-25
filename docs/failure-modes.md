@@ -28,6 +28,11 @@ Each of these happened during the port, was found, and has something that catche
 | **A tree read mid-transition.** `get_elements` right after a tap returned two root containers, which reads exactly like "the element does not exist"                                                                                                               | A real run reported it; a screenshot proved the screen was correct                         | `wdio-conventions.md` requires polling `get_elements` until an element of the destination screen appears, and a screenshot before concluding anything             |
 | **A claim taken from a README instead of the installed code.** This repository's own skill said `get_elements` filters to the viewport by default, quoting the tool's README; the installed 3.13.0 schema says the opposite                                        | Found while writing the rule, before it misled anyone                                      | The rule now says to pass both flags explicitly and not to trust the default. **Nothing enforces this** — the honest answer is "read the installed schema"        |
 
+| **A source search that answered a runtime question.** `accessibilityIdentifier` appears 0 times in the iOS app's source, and the brief concluded from that number that iOS exposes no accessibility ids. The runtime tree is full of them — `~Catalog-screen`, `~AddToCart`, `~ProceedToCheckout` — because UIKit sets them in storyboards, not in code | The first page source dump of the iOS app, three weeks after the claim was written | The count was right; the inference was not. The brief's own caveat — "confirm with a page source dump before deciding anything for iOS" — is now the rule in §5: a source search narrows a runtime question, it never closes one |
+| **A tree that calls a drawn element invisible.** XCUITest reports `visible="false"` for the iOS cart badge — and for the tab bar's own labels, which are plainly on screen. Reading the tree alone produced "iOS has no cart badge", which would have marked four cross-platform tests Android-only | A screenshot, taken because the same attribute called the visible tab labels invisible | A screenshot before concluding anything is absent — the rule a tree read mid-transition already forced — and assertions on tab-bar children read existence and text, never `toBeDisplayed()` |
+| **An accessibility id that lies about state.** iOS's More menu exposes `LogOut-menu-item` both logged out and logged in; only the visible label switches between "Log Out" and "Login" | Checking that a relaunch clears the session: the id was there in both states, so the check proved nothing | Session state is read from the label, never from that id's presence. An id names a widget, not a state (ADR-0044) |
+| **A screen already inside another screen's page source.** On iOS the catalog's source carries the empty-cart view (`No Items`, `Go Shopping`) while the catalog is what is on screen | Dumping the catalog while hunting for the cart's anchors | An existence assertion is not a screen assertion: cart checks are scoped to `~Cart-screen`, and arrival is polled on the destination's own anchor |
+| **A driver error that named nothing.** The first XCUITest session failed with a bare "code 70". Xcode 16.2 ships only the iPhoneSimulator18.2 SDK, and the machine had only the iOS 17.5 runtime installed | `xcodebuild -showdestinations`, run by hand, returned a placeholder saying "iOS 18.2 is not installed" — which the driver never said | `xcodebuild -downloadPlatform iOS` (iOS 18.3, 8.72 GB) fixed it, and brief §4 no longer claims this machine needs nothing. **Unenforced:** the rule is to run the underlying tool by hand when a driver reports only a number |
 | **A branch rule that rejected a bot's push.** The Qase sync committed a refreshed `qase-map.json` straight to `main`. A ruleset requiring pull requests then rejected it (`GH013 … Changes must be made through a pull request`), so **every merge left the sync job red** while Qase itself was perfectly in sync | The job failed minutes after the OR-2 merge | The sync keeps no local state and the workflow has `contents: read` (ADR-0043). There is nothing left to push, so the rule and the job no longer disagree |
 
 The pattern worth naming, and it is the web repo's pattern again: **most of these were a rule, a
@@ -72,6 +77,17 @@ making the assumption.
   exists would look like colour coverage and prove nothing — so the AC and the test dropped it. Caught
   now by `refine-ticket/references/rubric.md`, which flags an AC asking for a value the tree does not
   carry before it reaches generation.
+
+- **The iOS reset costs 3.0–3.5 s** (n=4, iPhone 16 / iOS 18.3, app 2.2.2): terminate + activate until
+  `~Catalog-screen` is displayed, 3 037–3 464 ms, against Android's 2.6 s median. Both clear the cart
+  and the session, so ADR-0040's strategy holds unchanged on the second platform.
+- **The same app is not the same data.** iOS says `Sauce Labs Backpack - Red` where Android says
+  `Sauce Labs Backpack (red)`, and renders a cart total as `$59.98` where Android writes `$ 179.94`.
+  Product names and money formatting are platform-dependent inputs (ADR-0044), not constants.
+- **The iOS login screen has no ids on its inputs.** One `XCUIElementTypeTextField` and one
+  `XCUIElementTypeSecureTextField`, both unnamed, and a submit `Button` named `Login` — the same name
+  as the screen title's `StaticText`, so it needs a predicate on type to be unambiguous. Tapping a
+  username chip fills both fields at once, which Android has no equivalent of.
 
 ---
 
