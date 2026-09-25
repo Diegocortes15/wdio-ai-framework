@@ -24,7 +24,10 @@ Score the **whole ticket** (Feature + every AC). Treat each AC independently for
 10. **EARS shape** — each AC is written in EARS form: an explicit trigger, one system, one response. See the section below for the patterns and the phrasing rule. Gap → rewrite the AC in the pattern that fits. This is not decoration: the trigger keyword is what forces a precondition to be stated, and the single `shall` is what makes item 2 checkable rather than a matter of taste.
 
 11. **Intended or observed** — each AC makes clear whether it states what the system **should**
-    do or what it **currently** does. The distinction is not cosmetic: it decides what happens
+    do or what it **currently** does. An AC whose wording came from looking at the running app
+    (`sources.md` §6) starts life as **observed** and stays observed unless a person says otherwise
+    at the approval gate: the app shows what was built, including its defects, and promoting that to
+    intended behaviour is a decision only the author can take. The distinction is not cosmetic: it decides what happens
     when the test fails. An AC of intended behaviour that the app contradicts is a **finding** —
     the ADR-0020 gate blocks the run and a person files the defect. An AC of observed behaviour
     is characterization, and its test simply passes.

@@ -13,13 +13,51 @@
    - `src/components/`, and `src/fixtures/` or `src/hooks/` where they exist — what's wired, including the state every test starts from.
 4. **App domain knowledge** — `docs/app/` when present: `users.md` (the real users), `flows.md`, `overview.md`, `glossary.md`.
 5. **Framework judgment** — `CLAUDE.md`, `from-issue/references/bucket-classification.md`, `from-issue/references/smoke-policy.md`, `from-issue/references/qa-analysis.md`.
-6. **User-supplied** — anything the user points at mid-loop (next section).
+6. **The running application** — only when the ticket references something that already exists, and under the rules in the section below.
+7. **User-supplied** — anything the user points at mid-loop.
 
-> **Not a source: the live app.** `/refine-ticket` never drives a running app (no `playwright-cli`). Refinement is **shift-left** — it must work for a ticket whose feature isn't built yet. Exact selectors and live strings are confirmed by `/from-issue` at generation time, never baked into the ticket. Any fact the ticket / docs / existing automation don't carry is asked of the user.
+## 6. The running application — for a reference that already exists, and nothing else
+
+Refinement is **shift-left**: it must work for a ticket whose feature is not built yet. That is why the
+app is not a general source. But a ticket often points at something that **does** exist — "the same
+error as the login screen", "reuse the cart's empty state", "this button, on the new page" — and for
+that kind of gap the app is the very thing the ticket is referring to. Asking the user to re-describe
+what the app already shows is worse than looking (ADR-0045 scopes the inherited ADR-0013 for this).
+
+**The test for whether the app may be consulted** is one question: *does the thing the ticket
+references already exist?*
+
+- **Yes** — a screen, a message, a component, a behaviour the new work is asked to copy or extend.
+  Open it, read it, record it as an observation.
+- **No** — the behaviour is new, or the reference is the behaviour under design. Close the gap the
+  normal way: ask the user, or point at a doc. **Never drive the app to decide what new behaviour
+  should be.** That is writing the specification from the implementation, and it silently promotes
+  today's defects into tomorrow's acceptance criteria.
+
+**Every reading is an observation, never a requirement.** Record it with its provenance and carry it to
+the approval gate marked `observed`, so a person decides whether it is intended behaviour:
+
+```
+Observed 2026-09-25 on Android (my-demo-app 2.2.0, emulator API 35):
+the cart's empty state shows "Oh no! Your cart is empty…" above a "Go Shopping" button.
+```
+
+**Name the platform, always.** The two builds of this SUT do not agree: the same account is
+`bod@example.com` on Android and `bob@example.com` on iOS, product names differ, and one account is
+locked out on Android and signs in on iOS. An observation without a platform is false half the time.
+When the AC applies to both platforms, **observe both** before writing it, and say so; when they
+differ, that difference is itself a gap for the author to resolve.
+
+**If the app contradicts the ticket or the docs, that is a finding, not an input** (ADR-0030). Report
+it and let a person decide; do not quietly rewrite the AC to match what the app does.
+
+Two rules from before still hold: **no selectors in the ticket** (`/from-issue` confirms those at
+generation time), and **a missing device is never a failure** — if nothing is running, say the
+reference could not be verified and ask the user, exactly as with any other absent source.
 
 ## User-supplied-source protocol
 
-When a gap cannot be closed from sources 1–5, ask the user a **targeted** question and offer two response modes:
+When a gap cannot be closed from sources 1–6, ask the user a **targeted** question and offer two response modes:
 
 - **(a) Answer directly** — the user states the fact ("use `standard_user`"; "the error is `Epic sadface: ...`").
 - **(b) Point at a source** — the user names where the knowledge lives. Ingest it, then re-resolve the gap:
@@ -31,4 +69,4 @@ Ask one cluster of related gaps at a time; do not interrogate one field per mess
 
 ## Greenfield behavior
 
-On a repo with no `docs/app/` and an empty suite, sources 3–4 yield little; the skill leans on 5–6 (conventions + you). It still scores the ticket against the rubric and closes gaps via user input — it does **not** abort for lack of docs, and it does **not** invent ground truth silently.
+On a repo with no `docs/app/` and an empty suite, sources 3–4 yield little; the skill leans on 5 and 7 (conventions + you) — and source 6 answers nothing either, because a greenfield repo has nothing built to reference. It still scores the ticket against the rubric and closes gaps via user input — it does **not** abort for lack of docs, and it does **not** invent ground truth silently.
