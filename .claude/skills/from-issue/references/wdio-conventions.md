@@ -88,11 +88,63 @@ Stated here rather than cited, because a skill lifted into another repository ta
 
 **A Page composes Components and holds page-unique locators.** It never composes another Page.
 
-**Tests know Pages and Data only** — never a raw `$()` built in the spec, never a Component imported into it. Reaching a component **through the Page that composes it** is allowed and is the intended shape: `ProductDetailPage.header.cartBadge` is the header of the screen the test is on. What the rule forbids is a spec constructing or importing a Component itself, or building its own locator.
+**Tests know Pages and Data only** — never a raw `$()` built in the spec, never a Component imported into it. Reaching a component **through the Page that composes it** is allowed and is the intended shape: `ProductDetailPage.navigation.cartBadge` is the chrome of the screen the test is on. What the rule forbids is a spec constructing or importing a Component itself, or building its own locator.
 
 **Page Objects are exported as singletons** (`export default new LoginPage()`), because WebdriverIO has no fixtures to inject them. A spec imports the Page it uses (`import LoginPage from '@pages/LoginPage'`). Locators are getters, so each access re-queries the current screen instead of holding a stale element.
 
 If you are generating for an app whose team already uses fluent Page Objects, this is a real disagreement: say so in the obstacles section rather than quietly following the house style of whichever repository you are standing in.
+
+## Two platforms, one spec
+
+A suite that runs on Android and iOS keeps **one spec and one Page Object per screen**. What differs is
+resolved below the test, never inside it.
+
+**A locator, a flow or a datum that differs is a two-key map**, resolved when the getter is called:
+
+```ts
+get cartButton() {
+  return $(byPlatform({ android: '~View cart', ios: '~Cart-tab-item' }));
+}
+```
+
+Not `if (driver.isIOS)`. The map's type requires both keys, so a half-ported Page Object fails
+`tsc --noEmit` — a check that runs without a device — while a missing `if` branch fails at runtime on
+someone else's machine. Lint forbids `driver.isAndroid` / `driver.isIOS` and `byPlatform` inside a spec:
+only the runner and the object model know the platform.
+
+**Data that differs belongs in `data/`, and never in a test title.** The same product can be
+`Sauce Labs Backpack (red)` on one platform and `Sauce Labs Backpack - Red` on the other; a title is the
+TCMS case's identity, so a platform-dependent title splits one behaviour into two cases.
+
+**An element that exists on one platform only** is `onlyOn('android', selector, reason)`: reading it from
+the other platform throws instead of returning a locator that quietly matches nothing.
+
+**A test whose BEHAVIOUR the other platform does not have** is `itOn(platform, reason, title, fn)`. The
+reason is required and is printed in the report. The bar is deliberately high: when the behaviour exists
+and only the observation differs, the test stays single and `byPlatform` resolves the locator. Reach for
+`itOn` only when the app genuinely lacks the feature, or when the platform cannot be driven to the state
+— and say which, in the reason.
+
+**Scaffold in two passes.** Measure one platform, write the Page Object, then measure the second and fill
+the other half of each map. Nothing needs to remember the second pass: until it happens, the build does
+not compile.
+
+### iOS traps worth knowing before you measure
+
+Each of these produced a wrong conclusion once, on a real app:
+
+- **`visible="false"` does not mean absent.** XCUITest reports it for elements the app plainly draws
+  (a tab-bar badge, the tab labels themselves). Take a screenshot before concluding anything is missing,
+  and assert such elements with `toExist()` and their text, never `toBeDisplayed()`.
+- **Another screen's elements can sit in the page source** while a different screen is on display, so
+  existence alone is not proof of arrival. Scope to the screen's own container.
+- **An element's accessibility id is often its own text** (`~My Cart`, `~2 Items`, `~$ 29.99`). That is
+  usable when the text is static, and unusable when it is the value under test — then describe the shape
+  with a predicate (`name MATCHES "[0-9]+ Items"`).
+- **`$` inside a predicate pattern matches nothing** — it is the predicate language's variable marker.
+  Write a pattern that avoids it.
+- **An accessibility id can outlive the state it names.** One menu row kept the id `LogOut-menu-item`
+  whether the user was signed in or out; only the label changed. Read the label.
 
 ## Auto-waiting assertions
 

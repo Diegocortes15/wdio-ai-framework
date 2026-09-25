@@ -1,17 +1,18 @@
 # 0044 — One suite, two platforms: the same specs run on Android and iOS
 
 **Date:** 2026-09-25
-**Status:** Proposed
-**Confidence:** High for the reset and the platform-skip mechanics — both measured on a device, see
-below. Medium for the locator layer: `byPlatform` is designed and typechecked, but no Page Object has
-been ported to it yet, so the claim "only the locators differ" is measured on the page source, not on
-a green iOS run.
+**Status:** Accepted
+**Confidence:** High. Implemented and run on both platforms 2026-09-25: Android 19 passing, iOS 12
+passing and 7 skipped, each skip printing its reason. The claim "only the locators differ" survived
+everywhere except the login form, which needs a different interaction on iOS — that exception is
+recorded below.
 **Review by:** when a device cloud runs the suite, or when a third target appears (tablet, real device).
 **Enforced by:** `tsc --noEmit` — a `Record<Platform, T>` locator map missing a platform does not
 compile, and typecheck already runs in `pr-checks.yml` without a device; an ESLint `no-restricted-syntax`
-rule that bans `driver.isAndroid` / `driver.isIOS` inside `tests/**`; `itOn` requires a written reason
-the way `itFails` requires a defect key. **None of the three exists yet** — they land with the refactor
-this record describes. Until then: prose only.
+rule that bans `driver.isAndroid` / `driver.isIOS` **and** `byPlatform` inside `tests/**` (validated
+against a known positive: both fire); `itOn` and `onlyOn` require a written reason the way `itFails`
+requires a defect key; `loadRecords` rejects a record without a non-empty `platforms` array, and
+`src/tcms/suite-sync.test.ts` covers the mapping.
 
 ## Context
 

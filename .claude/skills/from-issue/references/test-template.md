@@ -19,6 +19,7 @@ The `// Title:` line still carries the summary from the file's front matter.
 import LoginPage from '@pages/LoginPage';
 import CatalogPage from '@pages/CatalogPage';
 import { itFails } from '@utils/expected-failure'; // only when a test is locked to a defect
+import { itOn } from '@utils/platform-only'; // only when one platform lacks the behaviour
 
 // One describe per feature, titled '<feature> — <context-label>'. Every test starts from a
 // fresh app process, logged out (see "Session" below), so the context label is `no auth`.
@@ -45,6 +46,12 @@ describe('<feature> — no auth', () => {
     // Replace itFails with it when <DEFECT-KEY> is fixed; this test turning red is the notification.
     itFails('<DEFECT-KEY>', '<behavior description>', async () => {
       // ... asserts the INTENDED behaviour, exactly as the AC states it
+    });
+
+    // Only when the OTHER platform does not have this behaviour at all. The
+    // reason is required and reaches the report and the TCMS record.
+    itOn('<android|ios>', '<what the other platform lacks, measured>', '<behavior description>', async () => {
+      // ... the assertion, unchanged
     });
   });
 
@@ -84,6 +91,7 @@ describe('<feature> — no auth', () => {
   - Each Page Object the spec uses, as its default export: `import LoginPage from '@pages/LoginPage'`. Page Objects are singletons; there are no fixtures and nothing is constructed in the spec.
   - `describe`, `it` and `expect` are globals (Mocha + `expect-webdriverio`). Do not import them.
   - `import { itFails } from '@utils/expected-failure'` only when a test is locked to a defect.
+  - `import { itOn } from '@utils/platform-only'` only when a test covers one platform only.
 
 - **Describe wrap — one describe per feature**: `describe('<feature> — no auth', () => { ... })`. The label is `no auth` because every test starts logged out; a test that needs a session logs in as its first action, and its title says who (`bod@example.com logs in and …`).
 
@@ -94,6 +102,8 @@ describe('<feature> — no auth', () => {
   - not smoke: `it('an empty password is rejected with "Enter Password"', async () => { ... })`
 
   Keep tags at the end, after the prose, so the title still reads as a sentence and a grep for the prose still finds it. `@smoke` is the only tag; there are no routing tags (no per-user projects exist to route to).
+
+- **One platform only — `itOn`, never a branch inside the test.** When a suite runs on two platforms, a test whose behaviour the other platform does not have is declared `itOn('<platform>', '<reason>', '<title>', fn)`. The helper appends `@<platform>` to the title, where the tags live, and prints the reason beside the skipped test. Two things it is NOT for: a locator that merely differs (that is a `byPlatform` map inside the Page Object) and a value that differs (that is data). Both markers can apply at once — pass `itFails(...)` as `itOn`'s last argument. Details: `wdio-conventions.md`.
 
 - **Expected failures — `itFails`, never `it.skip`.** A test for an AC the application contradicts, **after a person has confirmed the defect and filed it** (ADR-0024), is written with `itFails('<DEFECT-KEY>', '<title>', fn)`. It runs for real, passes while the defect lives, and fails the day it is fixed. The key is a required argument; the comment above the call names the defect and says how to remove the marker. The helper appends `[expected failure: <KEY>]` to the title so the report shows it. **Never apply it on your own initiative** — see `fix-loop.md`. **Never write it directly, either:** render the test as a plain `it`, run it, confirm the failure is the defect's, then switch to `itFails` (workflow Step 7).
 

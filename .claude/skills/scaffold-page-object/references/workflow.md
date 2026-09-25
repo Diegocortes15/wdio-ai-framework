@@ -119,6 +119,31 @@ Default output path:
 
 Use the `Write` tool. (Step 3 already confirmed the path didn't exist.)
 
+### 9.5. When the suite runs on two platforms
+
+If the repository has more than one platform config (`config/wdio.*.conf.ts`), a Page Object is scaffolded
+in **two passes**, and this step says which pass you are in.
+
+**First pass** — you measured one platform. Write each locator as a two-key map and fill only the half you
+measured:
+
+```ts
+get cartButton() {
+  return $(byPlatform({ android: '~View cart', ios: /* second pass */ '' }));
+}
+```
+
+Say in the report, explicitly, that the file is half-measured and which platform is missing. Do **not**
+guess the other platform's locators from the first platform's: identifiers rarely match across builds,
+and a guess that happens to be wrong costs more than an empty string, which cannot pass a typecheck.
+
+**Second pass** — connect to the other platform, measure the same screen with the same tools, and fill the
+remaining halves. Nothing has to remember this: until every map has both keys the file does not compile,
+so Step 10 fails and says which locator is still empty.
+
+One thing does not go in the map: a value the other platform genuinely does not have. That is
+`onlyOn('<platform>', selector, reason)`, and the reason is required.
+
 ### 10. Isolated typecheck of the generated file
 
 Run the check — do NOT hand-roll a tsconfig, and never `npx tsc`:

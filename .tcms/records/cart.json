@@ -14,10 +14,11 @@
           "url": "https://diegocortes15.atlassian.net/browse/OR-2"
         }
       ],
-      "steps": []
+      "steps": [],
+      "platforms": ["android", "ios"]
     },
     {
-      "title": "tapping the catalog card for Sauce Labs Backpack (red) opens its detail screen",
+      "title": "tapping a catalog card opens the detail screen of that product",
       "acText": "WHEN the shopper taps the catalog card for `Sauce Labs Backpack (red)`, the app shall open a product detail screen titled `Sauce Labs Backpack (red)`.",
       "user": "no-auth",
       "tags": [],
@@ -30,7 +31,8 @@
           "url": "https://diegocortes15.atlassian.net/browse/OR-2"
         }
       ],
-      "steps": ["Open the product \"Sauce Labs Backpack (red)\""]
+      "steps": ["Open the product \"Sauce Labs Backpack (red)\""],
+      "platforms": ["android", "ios"]
     },
     {
       "title": "tapping increase quantity twice sets the quantity to 3",
@@ -46,7 +48,11 @@
           "url": "https://diegocortes15.atlassian.net/browse/OR-2"
         }
       ],
-      "steps": ["Open the product \"Sauce Labs Backpack (red)\"", "Increase the quantity 2 time(s)"]
+      "steps": [
+        "Open the product \"Sauce Labs Backpack (red)\"",
+        "Increase the quantity 2 time(s)"
+      ],
+      "platforms": ["android", "ios"]
     },
     {
       "title": "adding 3 units to the cart shows a cart badge of 3 @smoke",
@@ -66,7 +72,8 @@
         "Open the product \"Sauce Labs Backpack (red)\"",
         "Increase the quantity 2 time(s)",
         "Add the product to the cart"
-      ]
+      ],
+      "platforms": ["android", "ios"]
     },
     {
       "title": "adding 3 units twice shows a cart badge of 6, accumulating instead of replacing",
@@ -87,7 +94,8 @@
         "Increase the quantity 2 time(s)",
         "Add the product to the cart",
         "Add the product to the cart"
-      ]
+      ],
+      "platforms": ["android", "ios"]
     },
     {
       "title": "the cart lists one row for 6 units, with name, unit price and quantity @smoke",
@@ -109,10 +117,11 @@
         "Add the product to the cart",
         "Add the product to the cart",
         "Open the cart"
-      ]
+      ],
+      "platforms": ["android", "ios"]
     },
     {
-      "title": "the cart totals read \"6 Items\" and \"$ 179.94\" for 6 units",
+      "title": "the cart totals read the number of items and the price for 6 units",
       "acText": "WHEN the shopper opens the cart holding 6 units of that product, the totals shall read `6 Items` and `$ 179.94`.",
       "user": "no-auth",
       "tags": [],
@@ -131,7 +140,8 @@
         "Add the product to the cart",
         "Add the product to the cart",
         "Open the cart"
-      ]
+      ],
+      "platforms": ["android", "ios"]
     },
     {
       "title": "a cart holding a product is titled \"My Cart\"",
@@ -151,7 +161,8 @@
         "Open the product \"Sauce Labs Backpack (red)\"",
         "Add the product to the cart",
         "Open the cart"
-      ]
+      ],
+      "platforms": ["android", "ios"]
     },
     {
       "title": "a cart holding a product shows the Proceed To Checkout button",
@@ -171,7 +182,8 @@
         "Open the product \"Sauce Labs Backpack (red)\"",
         "Add the product to the cart",
         "Open the cart"
-      ]
+      ],
+      "platforms": ["android", "ios"]
     },
     {
       "title": "raising the quantity without tapping Add to cart puts nothing in the cart",
@@ -187,7 +199,11 @@
           "url": "https://diegocortes15.atlassian.net/browse/OR-2"
         }
       ],
-      "steps": ["Open the product \"Sauce Labs Backpack (red)\"", "Increase the quantity 2 time(s)"]
+      "steps": [
+        "Open the product \"Sauce Labs Backpack (red)\"",
+        "Increase the quantity 2 time(s)"
+      ],
+      "platforms": ["android", "ios"]
     }
   ]
 }

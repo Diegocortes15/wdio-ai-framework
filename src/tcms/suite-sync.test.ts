@@ -48,6 +48,7 @@ const record = (title: string, overrides: Partial<TestRecord> = {}): TestRecord 
   contextLabel: 'no auth',
   jira: [{ key: 'OR-1', url: 'https://x/browse/OR-1' }],
   steps: ['Open the login screen from the menu', 'Submit credentials for "bod@example.com"'],
+  platforms: ['android', 'ios'],
   ...overrides,
 });
 
@@ -143,10 +144,34 @@ test('a trailing tag is stripped from the case title, and an email at the end is
   assert.equal(caseTitle('no tags here'), 'no tags here');
 });
 
+test('the platforms a test covers reach the backend as labels', () => {
+  const c = mapToCase(record('a @smoke', { tags: ['@smoke'] }));
+  assert.deepEqual(c.tags, ['smoke', 'android', 'ios']);
+});
+
+test('a test on one platform only says so, with its reason, in the case description', () => {
+  const c = mapToCase(
+    record('a', { platforms: ['android'], platformNote: 'iOS cannot submit typed credentials' }),
+  );
+  assert.match(c.description, /Runs on android only: iOS cannot submit typed credentials/);
+  assert.deepEqual(c.tags, ['android']);
+});
+
+test('a test on both platforms says nothing about platforms in its description', () => {
+  assert.doesNotMatch(mapToCase(record('a')).description, /Runs on/);
+});
+
+test('loadRecords rejects a record with no platforms', () => {
+  const bad = { ...record('a') } as Partial<TestRecord>;
+  delete bad.platforms;
+  const dir = recordsDir({ 'login.json': { records: [bad] } });
+  assert.throws(() => loadRecords(dir), /missing a non-empty "platforms" array/);
+});
+
 test('tags reach the backend as labels, without the grep @', () => {
   const c = mapToCase(record('a @smoke', { tags: ['@smoke'] }));
   assert.equal(c.title, 'a');
-  assert.deepEqual(c.tags, ['smoke']);
+  assert.deepEqual(c.tags.slice(0, 1), ['smoke']);
 });
 
 test('tagging a test does not change the case it reconciles to', async () => {
