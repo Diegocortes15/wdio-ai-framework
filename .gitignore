@@ -5,3 +5,4 @@ apps/*.zip
 logs/
 dumps/
 test-results/
+apps/Payload/
