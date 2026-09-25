@@ -97,6 +97,24 @@ describe('Login — no auth', () => {
       },
     );
 
+    // OR-7 — iOS signs this account in; Android locks it out. The Android test
+    // above asserts the lockout through an error label iOS does not have, so the
+    // iOS half asserts the behaviour it CAN observe: the catalog must not open.
+    // Replace itFails with it when OR-7 is fixed; this test turning red is the
+    // notification.
+    itOn(
+      'ios',
+      'Android covers the lockout through its error message, in the test above',
+      'alice@example.com does not reach the catalog',
+      async () => {
+        await LoginPage.open();
+        await LoginPage.loginAs(LOCKED_OUT_USER.username, LOCKED_OUT_USER.password);
+
+        expect(await CatalogPage.opensWithin(NAVIGATION_WINDOW_MS)).toBe(false);
+      },
+      (title, fn) => itFails('OR-7', title, fn),
+    );
+
     const wrongCredentials = [
       { input: 'a wrong password', username: 'bod@example.com', password: 'xxxxxxxx' },
       { input: 'a username with no account', username: 'nadie@example.com', password: '10203040' },

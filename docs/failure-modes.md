@@ -94,8 +94,9 @@ making the assumption.
 
 - **The two builds do not agree on behaviour.** `alice@example.com` is locked out on Android and signs
   in on iOS 2.2.2 (measured 2026-09-25). A cross-platform suite therefore cannot assume that an AC
-  written from one app holds on the other — and the difference is a finding to report, not a test to
-  adjust (ADR-0030).
+  written from one app holds on the other. Reported, not worked around: filed as **OR-7** on Diego's
+  call, and covered on iOS by a test locked to it with `itFails` — it asserts the catalog must not
+  open, runs for real, and turns red the day iOS starts rejecting the account.
 - **iOS submits the login form only through the account chips.** Tapping a listed username fills both
   fields without raising the keyboard, which is the one path that leaves the submit button reachable.
 

@@ -119,6 +119,32 @@
       "platformNote": "iOS 2.2.2 signs alice@example.com in instead of locking the account out (measured 2026-09-25, reported)"
     },
     {
+      "title": "alice@example.com does not reach the catalog",
+      "acText": "IF the shopper submits alice@example.com, a locked-out account, THEN the app shall keep the shopper on the login screen instead of opening the catalog.",
+      "user": "alice@example.com",
+      "tags": [],
+      "bucket": "Negative",
+      "feature": "login",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-1",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-1"
+        }
+      ],
+      "steps": [
+        "Open the login screen from the menu",
+        "Submit credentials for \"alice@example.com\""
+      ],
+      "platforms": ["ios"],
+      "platformNote": "Android covers the same behaviour through its lockout error message, which iOS does not render",
+      "expectedFailure": {
+        "key": "OR-7",
+        "url": "https://diegocortes15.atlassian.net/browse/OR-7",
+        "reason": "iOS 2.2.2 signs the locked-out account in and opens the catalog; Android rejects it."
+      }
+    },
+    {
       "title": "a wrong password does not open the catalog",
       "acText": "IF the shopper submits bod@example.com with the wrong password xxxxxxxx, THEN the app shall keep the shopper on the login screen instead of opening the catalog.",
       "user": "bod@example.com",
