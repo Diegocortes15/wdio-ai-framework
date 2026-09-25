@@ -29,6 +29,36 @@ If the tree is dirty or the fast-forward fails (local diverged), don't force it 
 
 Then, per [`sources.md`](sources.md), consult sources in cheap→expensive order (repo reads → app docs → conventions). Do not yet ask the user — gather what ground truth exists first.
 
+## 3.5. Consult the running app — only for a reference that already exists
+
+Skip this step entirely unless a gap is about **something the ticket references that is already
+built** ("the same message as the login screen", "reuse the cart's empty state"). A gap about new
+behaviour is never answered by the app: see the rule and the reasoning in [`sources.md`](sources.md).
+
+When it does apply:
+
+1. **Ask before opening a device.** Name the gap and what you intend to look at, in one line: _"AC 3
+   says 'the same empty state as the cart' — may I open the cart on Android to read it?"_ The user
+   may answer from memory instead, which is cheaper than a device.
+2. **Use the exploration server, not the test run's.** Start it from the project root with the
+   repository's own script (`appium:explore`, port 4725 here) and drive the app through the
+   `wdio-mcp` tools. Running the suite kills an open exploration session, so do not do both at once.
+3. **Read, never act.** Open the referenced screen, capture what the ticket needs — visible text, the
+   presence of a control, the order of the steps — and stop. Refinement changes a ticket, not an app:
+   do not sign in as a user whose state the team cares about, do not submit forms that write data.
+4. **Record each reading as an observation** with date, platform and build, in the words of
+   [`sources.md`](sources.md). It goes into `assumptions[]` tagged `observed`, and it is shown as
+   such at the approval gate (Step 6) — it is never written into an AC as though the product had
+   specified it.
+5. **If the AC covers both platforms, look at both.** The builds of this SUT differ in account names,
+   product names and at least one behaviour. When the two disagree, that disagreement becomes a gap
+   for the author, not a choice the skill makes.
+6. **Close the session** when the gap is closed, and say in the report that a device was used and
+   which one.
+
+If no device is available, say the reference could not be verified and close the gap by asking the
+user. A missing device is never a failure, and never a reason to guess.
+
 ## 4. Score against the rubric
 
 Apply every item in [`rubric.md`](rubric.md) to the Feature + each AC. Produce a **gap list**: each unmet item, tagged with which AC it belongs to. Also build the `assumptions[]` running list (every inference made from a source rather than the ticket).
@@ -37,7 +67,9 @@ Apply every item in [`rubric.md`](rubric.md) to the Feature + each AC. Produce a
 
 Repeat until the gap list is empty (or the user says "good enough"):
 
-1. **Auto-resolve** every gap a source can answer; record each as an assumption.
+1. **Auto-resolve** every gap a source can answer; record each as an assumption. A gap that names an
+   existing screen, message or component may send you back to Step 3.5 — with the user's agreement,
+   and under its rules.
 2. **For residual gaps with no source**, ask the user a targeted, clustered question — offering **(a) answer directly** or **(b) point at a source** (Confluence / URL / doc path), per [`sources.md`](sources.md). Ingest any provided source.
 3. **Re-score** (Step 4) with the new information.
 
