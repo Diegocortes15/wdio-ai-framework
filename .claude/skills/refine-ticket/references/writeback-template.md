@@ -67,6 +67,17 @@ Each AC is a `listItem` whose paragraph opens with a `status` lozenge for its EA
 | Holds during a mode | `WHILE` | `purple` | Distinct from both, and carries no good/bad reading |
 | Invariant (no keyword) | `SHALL` | `neutral` | No trigger to announce |
 
+### An AC whose wording came from the running app
+
+A criterion written from what a device showed (`sources.md` §6) carries a **second lozenge**, after the
+EARS one: `text: "OBSERVED"`, `color: "neutral"`. It exists so a person reading the ticket months later
+knows that line describes what the app did on a given day rather than what the product decided, and the
+observation's provenance goes in the audit comment below.
+
+Two lozenges are the maximum; nothing else earns one. And this one is **only** written after the author
+confirmed at the approval gate that the observed behaviour is intended (rubric item 11) — if they did
+not confirm, the criterion does not go into the ticket at all.
+
 The lozenge **repeats the keyword that is already in the text**, so colour is never the only carrier — the rule this project applies wherever colour appears, because red–green deficiency affects roughly 8% of men. Removing every colour here would lose nothing but scannability.
 
 **No colour on the criteria themselves.** A list of requirements has no contrast for colour to reinforce, so tinting it would be decoration that costs legibility. Colour earns its place in a bug report because `Expected` versus `Actual` is a comparison; a list is not.
@@ -97,6 +108,15 @@ After the description write succeeds, post one comment via `addCommentToJiraIssu
 
 ```
 Refined by /refine-ticket on YYYY-MM-DD — N acceptance criteria hardened (see the "Refined Acceptance Criteria" section). Run /from-issue <KEY> to generate tests.
+```
+
+When any criterion came from looking at the app, the comment carries the provenance of every
+observation, one line each — otherwise the `OBSERVED` lozenge says a reading happened but not what was
+read, or when, or where:
+
+```
+Observed while refining, 2026-09-25, Android (my-demo-app 2.2.0, emulator API 35):
+- the cart's empty state shows "Oh no! Your cart is empty. Fill it up with swag to complete your purchase." above a "Go Shopping" button.
 ```
 
 ## If the user declines write-back

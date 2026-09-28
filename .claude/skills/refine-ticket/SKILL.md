@@ -1,7 +1,7 @@
 ---
 name: refine-ticket
 description: Iteratively harden a Jira automation ticket against a "bulletproof" rubric — grounded in existing automation, app docs, and user-supplied sources — then write the refined acceptance criteria back to the ticket on approval, so /from-issue has nothing left to guess.
-allowed-tools: Read Glob Grep mcp__atlassian__getAccessibleAtlassianResources mcp__atlassian__getJiraIssue mcp__atlassian__editJiraIssue mcp__atlassian__addCommentToJiraIssue mcp__atlassian__getConfluencePage mcp__atlassian__searchConfluenceUsingCql
+allowed-tools: Read Glob Grep Bash mcp__atlassian__getAccessibleAtlassianResources mcp__atlassian__getJiraIssue mcp__atlassian__editJiraIssue mcp__atlassian__addCommentToJiraIssue mcp__atlassian__getConfluencePage mcp__atlassian__searchConfluenceUsingCql mcp__wdio-mcp__start_session mcp__wdio-mcp__close_session mcp__wdio-mcp__get_elements mcp__wdio-mcp__get_screenshot mcp__wdio-mcp__tap_element mcp__wdio-mcp__swipe mcp__wdio-mcp__get_app_state
 ---
 
 # refine-ticket
@@ -18,13 +18,15 @@ Or to preview without writing to Jira:
 
 > Use the refine-ticket skill on SW-123 with dry-run.
 
-During the loop, when asked about a gap you can either answer directly or point the skill at a source ("it's in Confluence page X", a URL, a doc path). The skill ingests it and continues. It does NOT inspect a running app — it's shift-left, so it works even before the feature is built. It stops when the ticket has no open gaps, then asks before writing anything back.
+During the loop, when asked about a gap you can either answer directly or point the skill at a source ("it's in Confluence page X", a URL, a doc path). The skill ingests it and continues. It stops when the ticket has no open gaps, then asks before writing anything back.
+
+Refinement is **shift-left**: it works for a ticket whose feature is not built yet, and it never asks the app what new behaviour should be. The one exception is a ticket that points at something that **already exists** — "the same error as the login screen", "reuse the cart's empty state", "this component, on the new page". There the skill asks your permission, opens the referenced screen on a device, and records what it saw as an **observation** with its date, platform and build. An observation reaches the approval gate marked `observed` and becomes an acceptance criterion only if you say it is intended behaviour, because an app shows what was built, defects included. See ADR-0045, which scopes ADR-0013 for this.
 
 ## Workflow
 
 The full procedural workflow is in [`references/workflow.md`](references/workflow.md). Read that file before executing the skill.
 
-> **Setup note:** the Atlassian MCP must be connected (OAuth) with **write** scope for the Step 7 description update — defined at project scope in `.mcp.json`. Its read + write tools are pre-authorized in `allowed-tools` above so the loop doesn't prompt each call. Write-back happens only on your explicit approval (per ADR-0013).
+> **Setup note:** driving a device needs the exploration Appium server running (`appium:explore`) and the `wdio-mcp` server connected; without them the skill says the reference could not be verified and asks you instead. The Atlassian MCP must be connected (OAuth) with **write** scope for the Step 7 description update — defined at project scope in `.mcp.json`. Its read + write tools are pre-authorized in `allowed-tools` above so the loop doesn't prompt each call. Write-back happens only on your explicit approval (per ADR-0013).
 
 ## References
 
