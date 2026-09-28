@@ -56,7 +56,9 @@ if [ -n "$dirty" ]; then
     echo "$untracked" | sed 's/^/    /' >&2
   fi
   echo "" >&2
-  echo "  An earlier /from-issue run that aborted after Step 5 leaves exactly this." >&2
+  echo "  An earlier /from-issue run that aborted after Step 5 leaves exactly this — and so does" >&2
+  echo "  any other work in progress, including a sibling skill that writes a lesson into the repo." >&2
+  echo "  Read the diff before assuming which: the two need opposite treatment." >&2
   exit 11
 fi
 
