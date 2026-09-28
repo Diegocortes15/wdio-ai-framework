@@ -14,6 +14,8 @@ const PKG = 'com.saucelabs.mydemoapp.android:id';
 // one of those elements is named after the text it holds.
 const IOS_ROW = '-ios class chain:**/XCUIElementTypeCell/XCUIElementTypeStaticText';
 
+const EMPTY_MESSAGE = 'Oh no! Your cart is empty. Fill it up with swag to complete your purchase.';
+
 class CartPage {
   readonly navigation = new Navigation();
 
@@ -69,12 +71,75 @@ class CartPage {
     return $(byPlatform({ android: '~Confirms products for checkout', ios: '~ProceedToCheckout' }));
   }
 
-  /** Opens the cart from any screen that shows the app's navigation. */
+  /**
+   * One row's "Remove Item". Android: content-desc. iOS: a Button and a
+   * StaticText are both named "Remove Item", so `~Remove Item` matches 2 —
+   * the predicate asks for the Button. One match per row on each platform
+   * (measured 2026-09-28): with several rows WebdriverIO would act on the
+   * first, so a test that removes one of many needs a discriminator first.
+   */
+  get removeItemButton() {
+    return $(
+      byPlatform({
+        android: '~Removes product from cart',
+        ios: '-ios predicate string:type == "XCUIElementTypeButton" AND name == "Remove Item"',
+      }),
+    );
+  }
+
+  // The empty cart is a separate view, not this screen with an empty list: it
+  // holds a title, a message and a button, and none of the members above
+  // (measured 2026-09-28, both platforms). On iOS its three elements stay in
+  // the tree with visible="false" while the cart holds products, so assert them
+  // with `toBeDisplayed` — `toHaveText` or `toExist` would pass on a full cart.
+
+  /** "No Items". Android: resource-id, no content-desc. iOS: its text is its id. */
+  get emptyTitle() {
+    return $(byPlatform({ android: `id=${PKG}/noItemTitleTV`, ios: '~No Items' }));
+  }
+
+  /**
+   * Android: no resource-id and no content-desc, so the text is the only handle
+   * (UiSelector, exact match). iOS: the text is its accessibility id. Either
+   * way a copy change breaks the locator, which is the honest cost of testing
+   * a sentence.
+   */
+  get emptyMessage() {
+    return $(
+      byPlatform({
+        android: `android=new UiSelector().text("${EMPTY_MESSAGE}")`,
+        ios: `~${EMPTY_MESSAGE}`,
+      }),
+    );
+  }
+
+  /** iOS: `~GoShopping` is the Button; `~Go Shopping` is its StaticText label. */
+  get goShoppingButton() {
+    return $(byPlatform({ android: `id=${PKG}/shoppingBt`, ios: '~GoShopping' }));
+  }
+
+  /**
+   * Opens the cart from any screen that shows the app's navigation, whether it
+   * holds products or not. On Android the row list does not exist in an empty
+   * cart, so arrival is the row list OR the empty view's title. On iOS the
+   * row-list anchor is the screen container, present in both states.
+   */
   async open(): Promise<void> {
     await step('Open the cart', async () => {
       await this.navigation.openCart();
-      await this.productList.waitForDisplayed();
+      await driver.waitUntil(
+        async () => (await this.productList.isDisplayed()) || (await this.emptyTitle.isDisplayed()),
+        { timeoutMsg: 'The cart did not open: neither its rows nor its empty view appeared' },
+      );
     });
+  }
+
+  async removeItem(): Promise<void> {
+    await step('Remove the product from the cart', () => this.removeItemButton.click());
+  }
+
+  async goShopping(): Promise<void> {
+    await step('Go shopping from the empty cart', () => this.goShoppingButton.click());
   }
 
   // Row queries are parallel arrays, one entry per row (component-detection.md:

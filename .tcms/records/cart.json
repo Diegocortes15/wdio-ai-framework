@@ -204,6 +204,165 @@
         "Increase the quantity 2 time(s)"
       ],
       "platforms": ["android", "ios"]
+    },
+    {
+      "title": "an empty cart shows the title \"No Items\"",
+      "acText": "WHEN a shopper who has added nothing opens the cart, the cart shall display the title \"No Items\".",
+      "user": "no-auth",
+      "tags": [],
+      "bucket": "Positive",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-6",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-6"
+        }
+      ],
+      "steps": ["Open the cart"],
+      "platforms": ["android", "ios"]
+    },
+    {
+      "title": "an empty cart shows the message that the cart is empty",
+      "acText": "WHEN a shopper who has added nothing opens the cart, the cart shall display the message \"Oh no! Your cart is empty. Fill it up with swag to complete your purchase.\"",
+      "user": "no-auth",
+      "tags": [],
+      "bucket": "Positive",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-6",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-6"
+        }
+      ],
+      "steps": ["Open the cart"],
+      "platforms": ["android", "ios"]
+    },
+    {
+      "title": "an empty cart shows the Go Shopping button",
+      "acText": "WHEN a shopper who has added nothing opens the cart, the cart shall display a \"Go Shopping\" button.",
+      "user": "no-auth",
+      "tags": [],
+      "bucket": "Positive",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-6",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-6"
+        }
+      ],
+      "steps": ["Open the cart"],
+      "platforms": ["android", "ios"]
+    },
+    {
+      "title": "tapping Go Shopping on an empty cart returns to the catalog",
+      "acText": "WHEN the shopper taps \"Go Shopping\" on the empty-cart view, the app shall return to the catalog screen.",
+      "user": "no-auth",
+      "tags": [],
+      "bucket": "Positive",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-6",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-6"
+        }
+      ],
+      "steps": ["Open the cart", "Go shopping from the empty cart"],
+      "platforms": ["android", "ios"]
+    },
+    {
+      "title": "tapping Go Shopping on an empty cart shows the catalog heading \"Products\"",
+      "acText": "WHEN the shopper taps \"Go Shopping\" on the empty-cart view, the catalog shall display the heading \"Products\".",
+      "user": "no-auth",
+      "tags": [],
+      "bucket": "Positive",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-6",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-6"
+        }
+      ],
+      "steps": ["Open the cart", "Go shopping from the empty cart"],
+      "platforms": ["android"],
+      "platformNote": "the iOS catalog heading is an element named \"title\" with no readable text (measured 2026-09-28)"
+    },
+    {
+      "title": "an empty cart does not show the \"My Cart\" title",
+      "acText": "WHILE the cart is empty, the cart screen shall not display the \"My Cart\" title.",
+      "user": "no-auth",
+      "tags": [],
+      "bucket": "Positive",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-6",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-6"
+        }
+      ],
+      "steps": ["Open the cart"],
+      "platforms": ["android", "ios"]
+    },
+    {
+      "title": "an empty cart does not show the totals",
+      "acText": "WHILE the cart is empty, the cart screen shall not display the totals (item count and total price).",
+      "user": "no-auth",
+      "tags": [],
+      "bucket": "Positive",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-6",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-6"
+        }
+      ],
+      "steps": ["Open the cart"],
+      "platforms": ["android", "ios"]
+    },
+    {
+      "title": "an empty cart does not show Proceed To Checkout",
+      "acText": "WHILE the cart is empty, the cart screen shall not display \"Proceed To Checkout\".",
+      "user": "no-auth",
+      "tags": [],
+      "bucket": "Positive",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-6",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-6"
+        }
+      ],
+      "steps": ["Open the cart"],
+      "platforms": ["android", "ios"]
+    },
+    {
+      "title": "removing the last product with Remove Item shows the empty cart, titled \"No Items\" @smoke",
+      "acText": "WHEN the shopper removes the last product from the cart with \"Remove Item\", the cart shall display the empty-cart view, titled \"No Items\".",
+      "user": "no-auth",
+      "tags": ["@smoke"],
+      "bucket": "Edge",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-6",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-6"
+        }
+      ],
+      "steps": [
+        "Open the product \"Sauce Labs Backpack (red)\"",
+        "Add the product to the cart",
+        "Open the cart",
+        "Remove the product from the cart"
+      ],
+      "platforms": ["android", "ios"]
     }
   ]
 }
