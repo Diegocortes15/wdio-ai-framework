@@ -10,14 +10,14 @@ The `scaffold-page-object` skill renders generated files following this template
 // tickets. Manual edits are welcome — this file is not regenerated
 // automatically.
 
-import { Header } from '@components/Header'; // one import per detected component
+import { Navigation } from '@components/Navigation'; // one import per detected component
 import { step } from '@utils/step';
 
 const PKG = 'com.saucelabs.mydemoapp.android:id';
 
 class <Name>Page {
   // Composed components first (composition rule #6)
-  readonly header = new Header();
+  readonly navigation = new Navigation();
 
   // Page-direct locators second, as getters: each access re-queries the screen
   // instead of holding an element that goes stale after a transition.
@@ -41,7 +41,7 @@ class <Name>Page {
   // Action methods — every one a test calls directly wraps its body in ONE step.
   async open(): Promise<void> {
     await step('Open the <name> screen', async () => {
-      await this.header.openCart();
+      await this.navigation.openCart();
       await this.title.waitForDisplayed();
     });
   }

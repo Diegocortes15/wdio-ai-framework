@@ -355,11 +355,27 @@ compiler and would hand back a PASS the run never earned.
 **Run the smoke set, then the target spec.** Two commands, in that order (ADR-0032):
 
 ```bash
-npm run test:smoke
-npx wdio run ./wdio.android.conf.ts --spec <testfile>
+npm run test:smoke                                    # every platform the repo targets
+npx wdio run ./config/wdio.android.conf.ts --spec <testfile>
+npx wdio run ./config/wdio.ios.conf.ts --spec <testfile>
 ```
 
-The emulator must be running first (`npm run emulator`). If either command fails before a single test starts — no device, Appium not up, a system dialog over the app — that is an environment failure, not a test result: report it and stop; it does not consume a fix attempt.
+**Discover the configs; do not assume these paths.** A repository with one platform has one config,
+and its location is its own business — read `package.json`'s scripts and use what the repo says.
+Here there are two, and **both must run**: a pull request is opened green (ADR-0020), and green on
+one platform is not green. A test that covers one platform only declares it with `itOn`, which
+reports it as skipped on the other — a skip is an expected outcome here, not a failure.
+
+**Bring the device up through the repository, not by hand.** Look in `package.json` for a script that
+boots a device and Appium — **discover it, do not assume its name** (here it is `device:up`, which
+takes `android`, `ios` or `both`, is idempotent and leaves anything already running alone). Do not
+reach for the underlying tool instead: a repo script usually wraps a procedure, not a command — this
+one also disables the Google apps that ANR over the app under test, and it starts Appium from the
+project root, which is the only place Appium 3 resolves its drivers from.
+
+If a run fails before a single test starts — no device, Appium not up, a system dialog over the app
+— that is an environment failure, not a test result: report it and stop; it does not consume a fix
+attempt.
 
 Smoke first because it is a handful of tests, and a critical-path regression should
 stop the run before anything slower. Then the spec this run generated or augmented.

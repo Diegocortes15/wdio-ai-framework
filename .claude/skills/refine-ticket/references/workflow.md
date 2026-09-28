@@ -40,9 +40,12 @@ When it does apply:
 1. **Ask before opening a device.** Name the gap and what you intend to look at, in one line: _"AC 3
    says 'the same empty state as the cart' — may I open the cart on Android to read it?"_ The user
    may answer from memory instead, which is cheaper than a device.
-2. **Use the exploration server, not the test run's.** Start it from the project root with the
-   repository's own script (`appium:explore`, port 4725 here) and drive the app through the
-   `wdio-mcp` tools. Running the suite kills an open exploration session, so do not do both at once.
+2. **Bring the device up yourself, once the user has agreed to the reading.** The permission in
+   point 1 covers the mechanics: do not make the user boot an emulator by hand. Follow the rule in
+   the box below, then drive the app through the `wdio-mcp` tools. Use the **exploration** Appium,
+   never the test run's: running the suite kills an open exploration session, so do not do both at
+   once. Say how long it took if a device had to boot cold — it is around a minute and a half here,
+   and a user who asked a small question deserves to know why nothing has happened yet.
 3. **Read, never act.** Open the referenced screen, capture what the ticket needs — visible text, the
    presence of a control, the order of the steps — and stop. Refinement changes a ticket, not an app:
    do not sign in as a user whose state the team cares about, do not submit forms that write data.
@@ -56,8 +59,23 @@ When it does apply:
 6. **Close the session** when the gap is closed, and say in the report that a device was used and
    which one.
 
-If no device is available, say the reference could not be verified and close the gap by asking the
-user. A missing device is never a failure, and never a reason to guess.
+**Bring the device up through the repository, not by hand.** Look in `package.json` for a script
+that boots a device and the exploration Appium — **discover it, do not assume its name** (in this
+repository it is `device:up`, which takes `android`, `ios` or `both`, is idempotent, and leaves
+anything already running exactly as it is). Run that. Two reasons not to reach for the underlying
+tool instead:
+
+- **A repo script usually wraps a procedure, not a command.** Here, booting the emulator also
+  disables the Google apps that ANR over the app under test — a bare `emulator -avd` skips that and
+  reintroduces a failure this repository already recorded.
+- **Appium must start from the project root**, because Appium 3 resolves its drivers against the
+  `package.json` of the working directory. Started anywhere else, it finds none.
+
+If the repository has no such script, check what is running and ask the user to bring a device up.
+Never restart something that is already running: that is how an open session gets killed.
+
+If a device cannot be brought up at all, say the reference could not be verified and close the gap by
+asking the user. A missing device is never a failure, and never a reason to guess.
 
 ## 4. Score against the rubric
 

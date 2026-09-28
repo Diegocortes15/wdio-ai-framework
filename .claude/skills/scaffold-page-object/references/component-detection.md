@@ -10,9 +10,9 @@ Every file in `src/components/` MUST have a row. A component that is **nested** 
 
 | Component | Import path          | Root signature                                       | When detected, skip these elements                                                              |
 | --------- | -------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `Header`  | `@components/Header` | `~View menu` AND `~View cart` both present, 1 each    | the menu button, the app logo, the cart button, and the cart badge (`cartTV` and `cartCircleRL`) |
+| `Navigation` | `@components/Navigation` | the app's own chrome is present: on Android `~View menu` AND `~View cart`, on iOS the tab bar (`~Catalog-tab-item`, `~Cart-tab-item`, `~More-tab-item`) | the menu (drawer on Android, the More tab on iOS), the cart button, and the cart badge |
 
-**The cart badge belongs to `Header`, not to a component of its own.** It is part of the header on every screen that has one, and no second parent needs it. Extract it the moment one does (composition rule #10), and add its row here in the same commit.
+**The cart badge belongs to `Navigation`, not to a component of its own.** It is part of the header on every screen that has one, and no second parent needs it. Extract it the moment one does (composition rule #10), and add its row here in the same commit.
 
 ## Adding a new component
 
