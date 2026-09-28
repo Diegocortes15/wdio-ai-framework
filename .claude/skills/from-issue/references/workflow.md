@@ -389,7 +389,7 @@ run's job, not this step's.
 Record in the PR's Verification section that smoke plus the target spec ran, with per-test
 PASS/FAIL for both.
 
-Each run writes one record per test under `test-results/steps/` — title, outcome, the named
+Each run writes one record per test under `test-results/steps/<platform>/` — title, outcome, the named
 steps and the error. Step 11.5 reads the step titles from there; keep the target-spec run's
 records until then.
 
@@ -452,7 +452,7 @@ If `git push` fails (no remote, no auth), abort with the git error verbatim. The
 
 ### 11.5. Write the TCMS records artifact (Qase, at-merge model)
 
-**Skip** if `dry-run` **or `--from-file`** (ADR-0026 — no ticket, so no catalogue entry). Per [`references/tcms-sync.md`](tcms-sync.md): write the Step 6 semantic model to **`.tcms/records/<feature>.json`** — keyed by **feature, not ticket**: **append** to the existing feature file when one exists (Step 1.5 guarantees you branched from a base that includes any merged sibling work), create it only if absent. One object per generated test: `title`, `acText`, `user`, `tags`, `bucket`, `feature`, `contextLabel`, a **per-record `jira` array** (`[{ "key": "<KEY>", "url": "…/browse/<KEY>" }]`), the test's **`steps`** — copied from its run record under `test-results/steps/`, never invented — and `expectedFailure` when the test uses `itFails`. There is **no file-level `meta` block** (a feature file legitimately spans tickets; see [`tcms-sync.md`](tcms-sync.md) for the exact shape). `git add` it with the rest of the change (Step 11). This does **NOT** touch Qase. The authoritative Qase create/update/remove runs in CI when records change on `main` (`npm run tcms:sync`, see ADR-0041), so a rejected PR never mutates Qase. No `QASE_*` is needed at PR time.
+**Skip** if `dry-run` **or `--from-file`** (ADR-0026 — no ticket, so no catalogue entry). Per [`references/tcms-sync.md`](tcms-sync.md): write the Step 6 semantic model to **`.tcms/records/<feature>.json`** — keyed by **feature, not ticket**: **append** to the existing feature file when one exists (Step 1.5 guarantees you branched from a base that includes any merged sibling work), create it only if absent. One object per generated test: `title`, `acText`, `user`, `tags`, `bucket`, `feature`, `contextLabel`, a **per-record `jira` array** (`[{ "key": "<KEY>", "url": "…/browse/<KEY>" }]`), the test's **`steps`** — copied from its run record under `test-results/steps/<platform>/`, never invented — and `expectedFailure` when the test uses `itFails`. There is **no file-level `meta` block** (a feature file legitimately spans tickets; see [`tcms-sync.md`](tcms-sync.md) for the exact shape). `git add` it with the rest of the change (Step 11). This does **NOT** touch Qase. The authoritative Qase create/update/remove runs in CI when records change on `main` (`npm run tcms:sync`, see ADR-0041), so a rejected PR never mutates Qase. No `QASE_*` is needed at PR time.
 
 ### 12. Open PR
 

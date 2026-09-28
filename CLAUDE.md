@@ -53,7 +53,7 @@ open exploration session. How to use it: `wdio-conventions.md`.
 | Platform helpers, platform data       | `byPlatform`/`onlyOn` in `src/utils/platform.ts`, `itOn` in `platform-only.ts`; `data/` |
 | App reset before each test            | `src/hooks/reset-app.ts` (Mocha root hook)                                              |
 | Expected failure (ADR-0024)           | `itFails` in `src/utils/expected-failure.ts`                                            |
-| Named steps (`test.step`)             | `step` in `src/utils/step.ts`; run records in `test-results/steps/`                     |
+| Named steps (`test.step`)             | `step` in `src/utils/step.ts`; run records in `test-results/steps/<platform>/`          |
 | Qase catalogue sync                   | `src/tcms/`, `.tcms/records/` (ADR-0041, ADR-0043)                                      |
 | Apps, Appium server log               | `apps/`, `logs/` — both gitignored                                                      |
 | Skills; what broke here + the numbers | `.claude/skills/<name>/`; `docs/failure-modes.md`                                       |
