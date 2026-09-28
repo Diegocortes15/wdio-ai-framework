@@ -21,6 +21,7 @@
     "format:check": "prettier --check .",
     "emulator": "bash scripts/start-emulator.sh",
     "simulator": "bash scripts/start-simulator.sh",
+    "device:up": "bash scripts/device-up.sh",
     "tcms:sync": "tsx src/tcms/suite-sync.ts",
     "appium:explore": "appium --address 127.0.0.1 --port 4725"
   },

@@ -24,8 +24,8 @@ export ANDROID_HOME="$HOME/Library/Android/sdk"
 export JAVA_HOME="$(/usr/libexec/java_home)"
 export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
 
-npm run emulator     # boots the AVD and disables the Google apps that ANR over the SUT
-npm run simulator    # boots the iOS simulator the iOS config targets
+npm run device:up [android|ios]  # boots what is missing (AVD + its ANR preflight, simulator,
+                     # exploration Appium), leaves what is up alone. Pieces: emulator, simulator
 npm test             # both platforms, in sequence — the gate before a PR
 npm run test:android # one platform, the fast loop (also test:ios); -- --suite cart runs one feature
 npm run test:smoke   # tests whose title ends in @smoke, on both platforms

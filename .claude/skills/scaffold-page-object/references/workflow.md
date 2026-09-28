@@ -16,13 +16,29 @@ Check that the page name and the navigation are present. If either is missing, a
 
 ### 2. Confirm the device and the exploration server
 
+**Bring the device up through the repository, not by hand.** Look in `package.json` for a script
+that boots a device and the exploration Appium — **discover it, do not assume its name** (in this
+repository it is `device:up`, which takes `android`, `ios` or `both`, is idempotent, and leaves
+anything already running exactly as it is). Run that. Two reasons not to reach for the underlying
+tool instead:
+
+- **A repo script usually wraps a procedure, not a command.** Here, booting the emulator also
+  disables the Google apps that ANR over the app under test — a bare `emulator -avd` skips that and
+  reintroduces a failure this repository already recorded.
+- **Appium must start from the project root**, because Appium 3 resolves its drivers against the
+  `package.json` of the working directory. Started anywhere else, it finds none.
+
+If the repository has no such script, check what is running and ask the user to bring a device up.
+Never restart something that is already running: that is how an open session gets killed.
+
+Then confirm what you have, and read the device's own answer rather than a list:
+
 ```bash
-adb devices                              # expect one "<serial>  device" line
+adb shell getprop sys.boot_completed     # expect "1" — a listed device is not always a usable one
 curl -s http://127.0.0.1:4725/status     # expect "ready":true
 ```
 
-- **No device** → abort: _"No emulator or device is attached. Run `npm run emulator`, then re-run."_
-- **No Appium on 4725** → abort: _"The exploration Appium is not running. Run `npm run appium:explore`, then re-run."_
+Abort only if the preflight failed: _"No device could be brought up — <what the script printed>."_ Say in the report whether a device was already running or this run booted one.
 
 The exploration server is deliberately **not** the one the test run uses (4723): running the suite kills an open exploration session, and sharing one port makes that collision silent.
 
