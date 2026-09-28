@@ -46,6 +46,26 @@ Score the **whole ticket** (Feature + every AC). Treat each AC independently for
     sentence is the approval `/from-issue` needs to lock the test to the defect instead of
     stopping the run — without it, the run blocks and reports, as it should.
 
+12. **The scope the ticket already declared** — a ticket that says what it leaves out has made a
+    decision, and refinement does not silently reverse it. Before proposing any criterion, check the
+    ticket's own boundaries: an `Out of scope` list, a "that is `<KEY>`" pointer, a sibling ticket
+    named anywhere in the text.
+
+    A proposed criterion that falls inside one of those boundaries is **not forbidden** — the
+    boundary may be wrong, or the criterion may sit exactly on the line. It is forbidden to write it
+    without saying so. Surface it at the approval gate as its own item, naming the boundary it
+    crosses and the sibling ticket that owns it, and let the author accept it, decline it, or move
+    it to that sibling:
+
+    > AC 9 (the empty cart after `Remove Item`) crosses this ticket's own "Out of scope: the removal
+    > actions that lead here — that is OR-5". Keep it here, drop it, or move it to OR-5?
+
+    The same applies in reverse: when a boundary points at a sibling ticket, item 9's coverage check
+    runs against that sibling's criteria too, not only against the code. Two tickets that each
+    assume the other covers a behaviour leave it uncovered; two that both claim it produce two tests
+    asserting the same thing in different features, and only one of them will be found when it
+    breaks.
+
 ## EARS — the shape an AC takes
 
 [EARS](https://alistairmavin.com/ears/) (Easy Approach to Requirements Syntax, Mavin et al., Rolls-Royce, 2009) constrains a requirement to a trigger, a system, and one response. Five patterns; the first two carry almost all the traffic here.
