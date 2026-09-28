@@ -189,7 +189,7 @@ Rules:
 
 ## Named steps live in the Page Object, not the spec
 
-WebdriverIO has no `test.step`. The project's `step(title, fn)` helper (`src/utils/step.ts`) is the equivalent: it records the step's title, outcome and duration, and a WDIO hook writes one JSON record per test under `test-results/steps/`. Those titles are what other tools read — `/report-bug` turns a failed test's steps into repro steps, and the TCMS records artifact carries them as a case's steps.
+WebdriverIO has no `test.step`. The project's `step(title, fn)` helper (`src/utils/step.ts`) is the equivalent: it records the step's title, outcome and duration, and a WDIO hook writes one JSON record per test under `test-results/steps/<platform>/`. Those titles are what other tools read — `/report-bug` turns a failed test's steps into repro steps, and the TCMS records artifact carries them as a case's steps.
 
 ```ts
 // LoginPage.ts

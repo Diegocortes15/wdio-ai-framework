@@ -7,7 +7,12 @@
 // runtime by Node itself (onPrepare's rmSync) are relative to the working
 // directory, which is the project root.
 import { rmSync } from 'node:fs';
-import { STEPS_DIR, startStepRecord, writeStepRecord } from '../src/hooks/record-steps';
+import {
+  platformOfCapability,
+  startStepRecord,
+  stepsDirFor,
+  writeStepRecord,
+} from '../src/hooks/record-steps';
 
 export const sharedConfig: WebdriverIO.Config = {
   runner: 'local',
@@ -47,10 +52,12 @@ export const sharedConfig: WebdriverIO.Config = {
   // that fails has to fail the test, and WDIO's own hooks swallow errors.
   mochaOpts: { ui: 'bdd', timeout: 120_000, require: ['../src/hooks/reset-app.ts'] },
 
-  // The per-test step record the skills read. A run's records describe that
-  // run only, so they are cleared when it starts.
-  onPrepare: () => {
-    rmSync(STEPS_DIR, { recursive: true, force: true });
+  // The per-test step records the skills read. A run's records describe that run
+  // only, so they are cleared when it starts — but only this platform's, because
+  // `npm test` is two runs and the second used to erase the first's.
+  onPrepare: (_config, capabilities) => {
+    const [capability] = capabilities as WebdriverIO.Capabilities[];
+    rmSync(stepsDirFor(platformOfCapability(capability)), { recursive: true, force: true });
   },
   beforeTest: () => startStepRecord(),
   afterTest: (test, context, result) => writeStepRecord(test, context, result),
