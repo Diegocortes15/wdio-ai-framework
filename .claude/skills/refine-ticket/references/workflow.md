@@ -100,6 +100,10 @@ Show the user, in one message:
 - **Before → After** of the ACs (the hardened set).
 - **Resolved assumptions** — the `assumptions[]` list (what was inferred and from where).
 - **Coverage flags** — any rubric item-9 overlaps ("AC2 looks already covered by …").
+- **Criteria that cross a boundary this ticket declared** — rubric item 12: each one on its own
+  line, naming the boundary and the sibling ticket that owns it, with the three options (keep,
+  drop, move). Never fold these into the hardened set silently; a ticket's `Out of scope` is a
+  decision someone made, and reversing it is a decision too.
 - The exact `Refined Acceptance Criteria` block that will be written, shown as readable Markdown — say which lozenge each AC carries rather than printing raw ADF, which nobody can review. Structure and node types are in [`writeback-template.md`](writeback-template.md).
 
 Ask: **"Write this back to `<KEY>`? (yes / edit / no)"**
