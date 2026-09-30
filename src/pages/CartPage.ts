@@ -87,6 +87,31 @@ class CartPage {
     );
   }
 
+  /**
+   * One row's quantity controls. Android: content-desc (the product detail
+   * screen reuses `~Increase item quantity`, but only one screen is in the tree
+   * at a time). iOS: accessibility id. One match per row on each platform
+   * (measured 2026-09-30); like `removeItemButton`, a test that changes one of
+   * several rows needs a discriminator first.
+   */
+  get decreaseQuantityButton() {
+    return $(byPlatform({ android: '~Decrease item quantity', ios: '~SubtractMinus Icons' }));
+  }
+
+  get increaseQuantityButton() {
+    return $(byPlatform({ android: '~Increase item quantity', ios: '~AddPlus Icons' }));
+  }
+
+  /**
+   * One row's quantity, for an auto-waiting assertion after changing it — the
+   * same element `getQuantities()` reads across every row. Android: resource-id,
+   * no content-desc. iOS: the quantity's name is its own number, so the row's
+   * positional chain is the handle. One match per row (measured 2026-09-30).
+   */
+  get quantity() {
+    return $(byPlatform({ android: `id=${PKG}/noTV`, ios: `${IOS_ROW}[5]` }));
+  }
+
   // The empty cart is a separate view, not this screen with an empty list: it
   // holds a title, a message and a button, and none of the members above
   // (measured 2026-09-28, both platforms). On iOS its three elements stay in
@@ -136,6 +161,14 @@ class CartPage {
 
   async removeItem(): Promise<void> {
     await step('Remove the product from the cart', () => this.removeItemButton.click());
+  }
+
+  async decreaseQuantity(): Promise<void> {
+    await step('Decrease the quantity in the cart', () => this.decreaseQuantityButton.click());
+  }
+
+  async increaseQuantity(): Promise<void> {
+    await step('Increase the quantity in the cart', () => this.increaseQuantityButton.click());
   }
 
   async goShopping(): Promise<void> {

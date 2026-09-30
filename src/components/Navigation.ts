@@ -30,16 +30,24 @@ export class Navigation {
    * iOS: the badge is drawn inside the Cart tab item, but XCUITest reports it
    * `visible="false"` — as it does for the tab labels, which are plainly on
    * screen — so `toBeDisplayed` would be wrong here; the text is readable. Its
-   * own name IS the count, so the name cannot be the selector: the predicate
-   * asks for a StaticText whose name is a number. Measured 2026-09-25: 1 match
-   * on the catalog and on the product detail. On the CART screen a row quantity
-   * is numeric too, so the badge is not read there.
+   * own name IS the count, so the name cannot be the selector.
+   *
+   * iOS is a class chain, not a predicate: a bare "StaticText whose name is a
+   * number" also matches a cart row's quantity, and on the cart screen the two
+   * can read the same number — 1 match on the product detail, 2 on the cart.
+   * The badge is the numeric StaticText in the container beside the Cart tab's
+   * button, and a predicate cannot say "beside". Anchored on `Cart-tab-item`,
+   * not on the circle drawn behind the number: that image is `GreenRoundView`
+   * while the Cart tab is selected and `GrayRoundView` otherwise. Measured
+   * 2026-09-30: 1 match on the product detail and on the cart.
    */
   get cartBadge() {
     return $(
       byPlatform({
         android: `id=${PKG}/cartTV`,
-        ios: '-ios predicate string:type == "XCUIElementTypeStaticText" AND name MATCHES "[0-9]+"',
+        ios:
+          '-ios class chain:**/XCUIElementTypeOther[$name == "Cart-tab-item"$]' +
+          '/XCUIElementTypeOther/XCUIElementTypeStaticText[`name MATCHES "[0-9]+"`]',
       }),
     );
   }
