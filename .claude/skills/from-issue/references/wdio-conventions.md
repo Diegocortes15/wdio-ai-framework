@@ -51,7 +51,7 @@ So counting matters *more* here than on the web, not less. There is no runtime e
 Selectors are verified against the running app before they are written, never inferred from the ticket or from memory. In this repository the tool is the `wdio-mcp` MCP server (`@wdio/mcp`), which drives its own Appium session:
 
 - **`start_session`** with `platform: 'android'`, the device name, the APK's absolute `appPath`, `appWaitActivity: '*'` and **`autoAcceptAlerts: false`**. Its default accepts system dialogs silently — and a system dialog over the app is exactly what you need to see when an element "does not exist".
-- **`get_elements`** with `includeContainers: true` and `inViewportOnly: false` lists every element with its accessibility id, resource-id and text. Pass both explicitly rather than trusting a default — the tool's README and its own schema disagree about `inViewportOnly`, and a count taken over part of the screen is not a count.
+- **`get_elements`** with `includeContainers: true` and `inViewportOnly: false` lists every element it considers visible with its accessibility id, resource-id and text. Pass both explicitly rather than trusting a default — the tool's README and its own schema disagree about `inViewportOnly`, and a count taken over part of the screen is not a count. **It still omits what the platform calls invisible**, which on iOS includes elements the app plainly draws: a count of 0 from this tool is not proof of absence. When something you can see in a screenshot is missing from the listing, read the raw tree (`mobile: source` through `execute_script`) before concluding it is not there.
 - **`get_elements` is a snapshot, and nothing in the tool waits.** `tap_element` does not wait either. Right after a tap that changes screens, the tree can be half-built — two root containers and nothing else — which reads exactly like "the element does not exist". So poll: after any transition, call `get_elements` again until an element that identifies the destination screen appears (its title, a field only it has), up to about 5 attempts. Only once that anchor is present does a missing element mean anything. If it never appears, take `get_screenshot` to see what is actually on screen — a system dialog, a different screen — before concluding anything.
 - **A suggested selector ending in `.instance(N)` means the plain selector matches more than one element.** That is the count, delivered for you: narrow it, do not keep the suffix.
 - **Never copy an XPath the tool suggests** (`altSelector` often is one). XPath fails the build here.
@@ -141,6 +141,12 @@ Each of these produced a wrong conclusion once, on a real app:
 - **An element's accessibility id is often its own text** (`~My Cart`, `~2 Items`, `~$ 29.99`). That is
   usable when the text is static, and unusable when it is the value under test — then describe the shape
   with a predicate (`name MATCHES "[0-9]+ Items"`).
+- **An index in a class chain counts matches, not parents.** `**/Cell/StaticText[1]` does not mean
+  "the first StaticText of every cell" — it is the first match in the whole set. Measured with two
+  cart rows: the indexed chain returned **one** element while the un-indexed one returned ten. A row
+  query built that way reads the first row and reports it as every row, and a test asserting
+  `toEqual([oneProduct])` then passes with a cart holding two. To read a field per row, ask each
+  container element for its own children (`for (const cell of await $$(CELL)) cell.$$(TEXT)`).
 - **`$` inside a predicate pattern matches nothing** — it is the predicate language's variable marker.
   Write a pattern that avoids it.
 - **An accessibility id can outlive the state it names.** One menu row kept the id `LogOut-menu-item`

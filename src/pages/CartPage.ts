@@ -10,9 +10,15 @@ const PKG = 'com.saucelabs.mydemoapp.android:id';
 
 // iOS renders each cart row as a table cell whose StaticTexts are, in order:
 // product name, unit price, "Color:", the colour, the quantity. Measured
-// 2026-09-25; the positional chain is the only stable handle, because every
-// one of those elements is named after the text it holds.
-const IOS_ROW = '-ios class chain:**/XCUIElementTypeCell/XCUIElementTypeStaticText';
+// 2026-09-25; position is the only handle, because every one of those elements
+// is named after the text it holds.
+const IOS_CELL = '-ios class chain:**/XCUIElementTypeCell';
+const IOS_CELL_TEXT = '-ios class chain:**/XCUIElementTypeStaticText';
+
+// Positions inside a row, in the order above.
+const ROW_NAME = 0;
+const ROW_PRICE = 1;
+const ROW_QUANTITY = 4;
 
 const EMPTY_MESSAGE = 'Oh no! Your cart is empty. Fill it up with swag to complete your purchase.';
 
@@ -109,7 +115,16 @@ class CartPage {
    * positional chain is the handle. One match per row (measured 2026-09-30).
    */
   get quantity() {
-    return $(byPlatform({ android: `id=${PKG}/noTV`, ios: `${IOS_ROW}[5]` }));
+    return $(
+      byPlatform({
+        android: `id=${PKG}/noTV`,
+        // The 5th StaticText of the first cell. An index in a class chain counts
+        // MATCHES, not parents, so this is the first row's quantity — which is
+        // what a single-row test wants, and why the row queries below cannot use
+        // the same trick (measured 2026-09-30).
+        ios: `${IOS_CELL}/XCUIElementTypeStaticText[5]`,
+      }),
+    );
   }
 
   // The empty cart is a separate view, not this screen with an empty list: it
@@ -177,22 +192,41 @@ class CartPage {
 
   // Row queries are parallel arrays, one entry per row (component-detection.md:
   // uniform assertions across all rows, no per-row interaction yet).
+  //
+  // iOS asks each cell for its own texts rather than indexing the flat match
+  // set: measured 2026-09-30 with two products in the cart, a class chain
+  // ending in `StaticText[1]` returned ONE element — the first match overall,
+  // not the first of every cell. Reading one row and calling it every row is a
+  // test that passes while the cart holds something it never looked at.
+  private async rowTexts(position: number): Promise<string[]> {
+    const cells = await $$(IOS_CELL);
+    const values: string[] = [];
+    for (const cell of cells) {
+      const texts = await cell.$$(IOS_CELL_TEXT);
+      values.push(await texts[position].getText());
+    }
+    return values;
+  }
+
   async getProductNames(): Promise<string[]> {
-    return $$(byPlatform({ android: `id=${PKG}/titleTV`, ios: `${IOS_ROW}[1]` })).map((e) =>
-      e.getText(),
-    );
+    return byPlatform({
+      android: () => $$(`id=${PKG}/titleTV`).map((e) => e.getText()),
+      ios: () => this.rowTexts(ROW_NAME),
+    })();
   }
 
   async getUnitPrices(): Promise<string[]> {
-    return $$(byPlatform({ android: `id=${PKG}/priceTV`, ios: `${IOS_ROW}[2]` })).map((e) =>
-      e.getText(),
-    );
+    return byPlatform({
+      android: () => $$(`id=${PKG}/priceTV`).map((e) => e.getText()),
+      ios: () => this.rowTexts(ROW_PRICE),
+    })();
   }
 
   async getQuantities(): Promise<string[]> {
-    return $$(byPlatform({ android: `id=${PKG}/noTV`, ios: `${IOS_ROW}[5]` })).map((e) =>
-      e.getText(),
-    );
+    return byPlatform({
+      android: () => $$(`id=${PKG}/noTV`).map((e) => e.getText()),
+      ios: () => this.rowTexts(ROW_QUANTITY),
+    })();
   }
 }
 
