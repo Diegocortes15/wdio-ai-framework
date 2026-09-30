@@ -19,6 +19,8 @@ So Markdown gives you `rule`, `blockquote`, `table`, headings, lists and the usu
 
 > **Read and verify in ADF too.** `editJiraIssue` echoes the updated issue back in **Markdown** unless you ask otherwise, and that echo is lossy in exactly the ways above: the panel comes back as a plain bold paragraph and each lozenge as `<custom data-type="status" data-id="id-0">`. Nothing was lost in the ticket — only in the echo. So pass `responseContentFormat: "adf"` when you read, and never conclude from the Markdown echo that the write failed.
 
+> **The two parameters are not the same word.** A read takes **`responseContentFormat`**; a write takes **`contentFormat`**. Sending the write one to `getJiraIssue` is **not an error** — it is ignored, and the description comes back as Markdown, which looks exactly like an MCP that cannot return ADF. Measured on the same ticket minutes apart: `responseContentFormat: "adf"` returned a `doc` with its `panel` and `status` nodes; `contentFormat: "adf"` returned Markdown. **If a read comes back as Markdown, check which parameter you sent before concluding anything about the server** — and if ADF genuinely cannot be read on some future build, say so at the approval gate and rebuild the reporter's section from the Markdown rather than silently dropping what Markdown cannot express.
+
 > **No HTML-comment sentinels.** `<!-- … -->` is stored as visible literal text, not a hidden marker. The managed section is bounded by a visible `rule` + heading, which renders cleanly and gives a reliable anchor.
 
 ## The block
