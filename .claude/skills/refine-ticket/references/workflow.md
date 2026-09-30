@@ -117,7 +117,29 @@ Ask: **"Write this back to `<KEY>`? (yes / edit / no)"**
 
 ## 8. Hand off
 
-Suggest the next step: _"`<KEY>` is refined. Run `/from-issue <KEY>` to generate tests — its Assumptions block should now be near-empty."_
+**First, say what this run left in the repository.** Refinement's product is a Jira write, but a run
+that learned something writes it down (a row in the repository's failure-modes page, a corrected line
+in a reference) — and that change is left **uncommitted**, with no commit of its own to ride along
+with. The next skill then refuses to start on a dirty tree and reports the wrong cause, which has now
+happened twice.
+
+So end the run by naming it, the way an aborted generation names what it left behind:
+
+> Left on disk: `docs/failure-modes.md` (already committed, now modified) — the lesson this run
+> learned. It cannot ride along with `/from-issue <KEY>`: that PR would carry an unrelated docs
+> change, and the generation refuses to start until the tree is clean.
+>
+> Want me to land it as its own PR before you generate? (yes / I'll handle it / drop it)
+
+On **yes**, put it on its own branch, commit it with a message that says what was learned, open the
+pull request, and report the link. On **I'll handle it**, leave it and print the one-line command.
+On **drop it**, discard it and say so — a lesson nobody will commit is worse than no lesson, because
+it blocks the next run and gets blamed on the wrong skill. Asking here is what makes this compatible
+with "commit only when asked": the person is present, and they answer.
+
+If the run changed nothing in the repository, say `Left on disk: nothing.` and move on.
+
+Then suggest the next step: _"`<KEY>` is refined. Run `/from-issue <KEY>` to generate tests — its Assumptions block should now be near-empty."_
 
 Then report **Obstacles encountered** — ALWAYS, even when there are none (one line:
 `Obstacles encountered: none.`). Per ADR-0022 it carries three things: tooling friction (a
@@ -136,4 +158,4 @@ are the agent's own process, not the ticket's content.
 - No sources + user provides none → still score + ask per gap; never invent ground truth.
 - Decline at approval → no mutation; emit locally.
 - Write fails → report verbatim; result preserved in-session.
-- No live app: `/refine-ticket` never drives a running app. Facts not in the ticket/docs/automation are asked of the user; exact selectors/strings are `/from-issue`'s job at generation time.
+- No device available: refinement continues without it. It may drive a running app **only** to read a reference the ticket points at and that already exists (Step 3.5 and `sources.md`); when nothing can be brought up, say the reference could not be verified and ask the user, as with any absent source. Exact selectors and live strings are still `/from-issue`'s job at generation time, never the ticket's.
