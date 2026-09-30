@@ -224,6 +224,15 @@ There is no `storageState` equivalent: the app keeps session and cart in memory,
 
 Methods are verb phrases (`open()`, `loginAs()`, `openProduct()`); queries return data. Locators are exposed as getters so a spec can assert on them with an auto-waiting matcher, but a spec never builds its own `$()`.
 
+**A query that returns a collection is verified against more than one item, or it is reported as
+unverified.** One row is the state where every wrong implementation still looks right: a selector
+that reads the first match, a chain that stops at the first parent, a filter that silently drops the
+rest — all of them return the correct single-element array. Put a second item in the list before
+trusting the method, and if the application cannot be driven to that state during this run, say so
+in the PR body rather than letting the single-row pass stand as evidence. Real case: an iOS cart
+query answered `["the first product"]` for a cart holding two, and every test was green because no
+ticket had ever asked for two.
+
 ```ts
 // GOOD
 await LoginPage.loginAs('bod@example.com', '10203040');

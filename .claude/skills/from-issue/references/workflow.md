@@ -229,10 +229,10 @@ Group the `worth_automating=true` AC records into a set of tests. One test may c
 **Read the existing `@smoke` set first.** One of the policy's criteria is relational — a test is *not* smoke when "a more critical version of the same error is already smoke" — and that cannot be evaluated without knowing what already carries the tag:
 
 ```bash
-grep -rhoE "(it|itFails)\((['\"\`]).*@smoke" tests/ | sed -E "s/^(it|itFails)\(['\"\`]([A-Z][A-Z0-9]+-[0-9]+['\"\`], ['\"\`])?//" | sort -u
+grep -rhoE "[^'\"\`]*@smoke" tests/ | sed -E "s/^[^A-Za-z0-9]*//" | grep " @smoke$" | sort -u
 ```
 
-WebdriverIO has no `--list`, so this reads the titles from the spec files; a smoke test's title ends in `@smoke`. If the command fails for any reason, assign smoke without it and note in the PR body that the relational criterion went unchecked — do not guess at what is already tagged.
+WebdriverIO has no `--list`, so this reads the titles from the spec files. **Match the tag, not the call.** An earlier version of this command looked for `it(` or `itFails(` followed by `@smoke` on the same line, and missed every test declared with a helper that puts the title on a later line — `itOn(platform, reason, title, fn)` hid a smoke test from the listing while `npm run test:smoke` ran it, so the relational criterion was judged against an incomplete set. The tag lives in the title string whatever wraps it, so grep for the tag. If the command fails for any reason, assign smoke without it and note in the PR body that the relational criterion went unchecked — do not guess at what is already tagged.
 
 Smoke assignment then follows [`references/smoke-policy.md`](smoke-policy.md) — read it before classifying. Smoke status is orthogonal to bucket: a Negative test can be smoke (critical regression risk) and a Positive test can be NOT-smoke (peripheral happy path). The default per smoke-policy.md is `false` ("when in doubt, NOT smoke").
 

@@ -7,6 +7,8 @@
 #     and targeting the wrong base (forced SW-11 to stop and ask).
 #   - Branching off a STALE base, so the "does this feature already exist?" checks wrongly
 #     conclude the feature is new and fork a colliding copy (the SW-7/SW-8 collision).
+#   - Branching off a branch whose own pull request has already been merged, so the new PR
+#     targets a branch that leads nowhere (OR-5's run, on a squash-merged fix branch).
 #
 # Deciding what to do when the current branch is a leftover ticket branch needs a human, so
 # this reports that case rather than guessing. Everything else is mechanical.
@@ -17,6 +19,7 @@
 #         10  on a previous ticket's branch — ask the user which base to use, then re-run
 #         11  working tree is dirty — commit or stash first
 #         12  local base has diverged from its remote — reconcile, then re-run
+#         13  this branch's own pull request is already merged — switch to the integration base
 
 set -uo pipefail
 
@@ -24,6 +27,18 @@ current=$(git branch --show-current 2>/dev/null)
 if [ -z "$current" ]; then
   echo "sync-base-branch: detached HEAD — check out the integration base first." >&2
   exit 12
+fi
+
+# A branch whose PR is already merged is finished: branching off it targets a dead base, and a
+# squash merge leaves it looking perfectly healthy locally. Only asked when gh is available;
+# the skill checks gh in Step 1, so a missing one is not this script's problem to report.
+if command -v gh >/dev/null 2>&1; then
+  merged=$(gh pr list --head "$current" --state merged --json number --jq '.[0].number' 2>/dev/null)
+  if [ -n "${merged:-}" ]; then
+    echo "sync-base-branch: '$current' is finished — its pull request (#$merged) is already merged." >&2
+    echo "Check out the integration base (usually 'main'), pull, then re-run." >&2
+    exit 13
+  fi
 fi
 
 # A branch named like SW-123-feature is a prior run's, never a valid base.
