@@ -20,4 +20,13 @@ export const RED_BACKPACK = {
     return byPlatform({ android: '$ 179.94', ios: '$179.94' });
   },
   totalItemsForSix: '6 Items',
+  totalItemsFor(units: number): string {
+    return `${units} Items`;
+  },
+  /** Derived from `unitPrice`, so an expected total never restates the price. In cents: 29.99 × 5 is not 149.95 in floating point. */
+  totalPriceFor(units: number): string {
+    const cents = Math.round(Number(this.unitPrice.replace(/[^0-9.]/g, '')) * 100) * units;
+    const amount = (cents / 100).toFixed(2);
+    return byPlatform({ android: `$ ${amount}`, ios: `$${amount}` });
+  },
 };

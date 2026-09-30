@@ -2,7 +2,7 @@
   "records": [
     {
       "title": "an empty cart shows no cart badge",
-      "acText": "WHILE the cart is empty, the header shall not display a cart badge \u2014 it is absent from the view tree, not showing `0`.",
+      "acText": "WHILE the cart is empty, the header shall not display a cart badge — it is absent from the view tree, not showing `0`.",
       "user": "no-auth",
       "tags": [],
       "bucket": "Positive",
@@ -77,7 +77,7 @@
     },
     {
       "title": "adding 3 units twice shows a cart badge of 6, accumulating instead of replacing",
-      "acText": "WHEN the shopper taps Add to cart a second time with the quantity at 3, the cart badge shall read `6` \u2014 the cart accumulates instead of replacing.",
+      "acText": "WHEN the shopper taps Add to cart a second time with the quantity at 3, the cart badge shall read `6` — the cart accumulates instead of replacing.",
       "user": "no-auth",
       "tags": [],
       "bucket": "Positive",
@@ -187,7 +187,7 @@
     },
     {
       "title": "raising the quantity without tapping Add to cart puts nothing in the cart",
-      "acText": "IF the shopper raises the quantity on the detail screen without tapping Add to cart, THEN the header shall still display no cart badge \u2014 raising the quantity adds nothing to the cart.",
+      "acText": "IF the shopper raises the quantity on the detail screen without tapping Add to cart, THEN the header shall still display no cart badge — raising the quantity adds nothing to the cart.",
       "user": "no-auth",
       "tags": [],
       "bucket": "Negative",
@@ -361,6 +361,244 @@
         "Add the product to the cart",
         "Open the cart",
         "Remove the product from the cart"
+      ],
+      "platforms": ["android", "ios"]
+    },
+    {
+      "title": "decreasing a cart row of 6 units sets its quantity to 5",
+      "acText": "WHEN the shopper taps decrease on a cart row holding 6 units of the red backpack, the row's quantity shall read `5`.",
+      "user": "no-auth",
+      "tags": [],
+      "bucket": "Positive",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-5",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-5"
+        }
+      ],
+      "steps": [
+        "Open the product \"Sauce Labs Backpack (red)\"",
+        "Increase the quantity 2 time(s)",
+        "Add the product to the cart",
+        "Add the product to the cart",
+        "Open the cart",
+        "Decrease the quantity in the cart"
+      ],
+      "platforms": ["android", "ios"]
+    },
+    {
+      "title": "decreasing a cart row of 6 units makes the total read 5 items",
+      "acText": "WHEN the shopper decreases the quantity from 6 to 5, the cart total shall read `5 Items`.",
+      "user": "no-auth",
+      "tags": [],
+      "bucket": "Positive",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-5",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-5"
+        }
+      ],
+      "steps": [
+        "Open the product \"Sauce Labs Backpack (red)\"",
+        "Increase the quantity 2 time(s)",
+        "Add the product to the cart",
+        "Add the product to the cart",
+        "Open the cart",
+        "Decrease the quantity in the cart"
+      ],
+      "platforms": ["android", "ios"]
+    },
+    {
+      "title": "decreasing a cart row of 6 units makes the total price 5 times the unit price @smoke",
+      "acText": "WHEN the shopper decreases the quantity from 6 to 5, the total price shall read 5 × the unit price `$ 29.99` (149.95; Android renders `$ 149.95`, iOS `$149.95`).",
+      "user": "no-auth",
+      "tags": ["@smoke"],
+      "bucket": "Positive",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-5",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-5"
+        }
+      ],
+      "steps": [
+        "Open the product \"Sauce Labs Backpack (red)\"",
+        "Increase the quantity 2 time(s)",
+        "Add the product to the cart",
+        "Add the product to the cart",
+        "Open the cart",
+        "Decrease the quantity in the cart"
+      ],
+      "platforms": ["android", "ios"]
+    },
+    {
+      "title": "increasing a cart row of 6 units sets its quantity to 7",
+      "acText": "WHEN the shopper taps increase on a cart row holding 6 units, the row's quantity shall read `7`.",
+      "user": "no-auth",
+      "tags": [],
+      "bucket": "Positive",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-5",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-5"
+        }
+      ],
+      "steps": [
+        "Open the product \"Sauce Labs Backpack (red)\"",
+        "Increase the quantity 2 time(s)",
+        "Add the product to the cart",
+        "Add the product to the cart",
+        "Open the cart",
+        "Increase the quantity in the cart"
+      ],
+      "platforms": ["android", "ios"]
+    },
+    {
+      "title": "increasing a cart row of 6 units makes the total read 7 items",
+      "acText": "WHEN the shopper increases the quantity from 6 to 7, the cart total shall read `7 Items`.",
+      "user": "no-auth",
+      "tags": [],
+      "bucket": "Positive",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-5",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-5"
+        }
+      ],
+      "steps": [
+        "Open the product \"Sauce Labs Backpack (red)\"",
+        "Increase the quantity 2 time(s)",
+        "Add the product to the cart",
+        "Add the product to the cart",
+        "Open the cart",
+        "Increase the quantity in the cart"
+      ],
+      "platforms": ["android", "ios"]
+    },
+    {
+      "title": "increasing a cart row of 6 units makes the total price 7 times the unit price @smoke",
+      "acText": "WHEN the shopper increases the quantity from 6 to 7, the total price shall read 7 × the unit price (209.93, formatted per platform: `$ 209.93` on Android, `$209.93` on iOS).",
+      "user": "no-auth",
+      "tags": ["@smoke"],
+      "bucket": "Positive",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-5",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-5"
+        }
+      ],
+      "steps": [
+        "Open the product \"Sauce Labs Backpack (red)\"",
+        "Increase the quantity 2 time(s)",
+        "Add the product to the cart",
+        "Add the product to the cart",
+        "Open the cart",
+        "Increase the quantity in the cart"
+      ],
+      "platforms": ["android", "ios"]
+    },
+    {
+      "title": "tapping Remove Item on a cart row of 6 units removes all of them and shows the empty cart",
+      "acText": "WHEN the shopper taps `Remove Item` on a cart row holding 6 units, the cart shall remove the product with all 6 units, and the empty-cart view appears in its place.",
+      "user": "no-auth",
+      "tags": [],
+      "bucket": "Positive",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-5",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-5"
+        }
+      ],
+      "steps": [
+        "Open the product \"Sauce Labs Backpack (red)\"",
+        "Increase the quantity 2 time(s)",
+        "Add the product to the cart",
+        "Add the product to the cart",
+        "Open the cart",
+        "Remove the product from the cart"
+      ],
+      "platforms": ["android", "ios"]
+    },
+    {
+      "title": "removing the only product with Remove Item leaves no cart badge",
+      "acText": "WHEN the shopper removes the cart's only product with `Remove Item`, the cart icon shall display no badge.",
+      "user": "no-auth",
+      "tags": [],
+      "bucket": "Positive",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-5",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-5"
+        }
+      ],
+      "steps": [
+        "Open the product \"Sauce Labs Backpack (red)\"",
+        "Increase the quantity 2 time(s)",
+        "Add the product to the cart",
+        "Add the product to the cart",
+        "Open the cart",
+        "Remove the product from the cart"
+      ],
+      "platforms": ["android", "ios"]
+    },
+    {
+      "title": "decreasing a cart row from 6 to 5 units makes the cart badge read 5",
+      "acText": "WHEN the shopper decreases the quantity from 6 to 5 on the cart screen, the cart badge shall read `5`.",
+      "user": "no-auth",
+      "tags": [],
+      "bucket": "Positive",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-5",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-5"
+        }
+      ],
+      "steps": [
+        "Open the product \"Sauce Labs Backpack (red)\"",
+        "Increase the quantity 2 time(s)",
+        "Add the product to the cart",
+        "Add the product to the cart",
+        "Open the cart",
+        "Decrease the quantity in the cart"
+      ],
+      "platforms": ["android", "ios"]
+    },
+    {
+      "title": "tapping decrease on a cart row of 1 unit removes the product and shows the empty cart",
+      "acText": "WHEN the shopper taps decrease on a cart row holding exactly 1 unit, the cart shall remove the product, and the empty-cart view appears in its place.",
+      "user": "no-auth",
+      "tags": [],
+      "bucket": "Edge",
+      "feature": "cart",
+      "contextLabel": "no auth",
+      "jira": [
+        {
+          "key": "OR-5",
+          "url": "https://diegocortes15.atlassian.net/browse/OR-5"
+        }
+      ],
+      "steps": [
+        "Open the product \"Sauce Labs Backpack (red)\"",
+        "Add the product to the cart",
+        "Open the cart",
+        "Decrease the quantity in the cart"
       ],
       "platforms": ["android", "ios"]
     }
