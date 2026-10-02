@@ -116,7 +116,16 @@ making the assumption.
 
 - **A plausible-but-wrong test passes every gate.** Inherited unchanged from the web repo. A real
   instance is already in the suite: the test for OR-1's AC 1 asserts three elements are displayed, and
-  `LoginPage.open()` already waits for one of them. Nothing but a reviewer catches that.
+  `LoginPage.open()` already waits for one of them. **Partly addressed on 2026-10-02**, after two more
+  instances shipped green — a badge locator that read a row's quantity, and a row query that read one
+  row and reported it as all of them. `/from-issue` now asks two questions of every new test, with the
+  answers in the PR body: is the value it asserts unique on that screen, and would it still pass with
+  its Act step deleted. The counting half is a script: a run with `AUDIT_ASSERTIONS=1` captures every readable string on
+  screen before and after each test, and `npm run audit:assertions` reports the values a test asserts
+  that appear more than once at the end, or were already there before it acted. Run against the cart
+  spec the day it was written, it raised four questions, one of them the exact value that had been
+  read off the wrong element. **Still not a gate:** it reports, a person answers, and a test that
+  asserts the right value on the wrong element in a state nobody separated still passes.
 - **The suite never runs in CI.** No device. PR checks cover install, types, lint, format and the unit
   tests of the Qase sync; whether the tests pass is established on one developer's machine.
 - **A dry run is not an independent rerun.** The two `/from-issue` rehearsals of OR-1 produced identical

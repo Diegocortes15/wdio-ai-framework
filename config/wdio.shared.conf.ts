@@ -7,12 +7,19 @@
 // runtime by Node itself (onPrepare's rmSync) are relative to the working
 // directory, which is the project root.
 import { rmSync } from 'node:fs';
+import { captureAfter, captureBefore } from '../src/hooks/assertion-audit';
 import {
   platformOfCapability,
   startStepRecord,
   stepsDirFor,
   writeStepRecord,
 } from '../src/hooks/record-steps';
+
+// The Mocha context carries the full title; WDIO's own test object does not.
+const fullTitleOf = (test: { parent?: string; title: string }, context: unknown): string => {
+  const mocha = context as { test?: { fullTitle?: () => string } } | undefined;
+  return mocha?.test?.fullTitle?.() ?? `${test.parent ?? ''} ${test.title}`.trim();
+};
 
 export const sharedConfig: WebdriverIO.Config = {
   runner: 'local',
@@ -59,6 +66,15 @@ export const sharedConfig: WebdriverIO.Config = {
     const [capability] = capabilities as WebdriverIO.Capabilities[];
     rmSync(stepsDirFor(platformOfCapability(capability)), { recursive: true, force: true });
   },
-  beforeTest: () => startStepRecord(),
-  afterTest: (test, context, result) => writeStepRecord(test, context, result),
+  // The audit captures the screen before and after each test, for
+  // `npm run audit:assertions`. It is off unless AUDIT_ASSERTIONS=1, because two
+  // page-source reads per test cost real seconds on iOS.
+  beforeTest: async (test, context) => {
+    startStepRecord();
+    await captureBefore(fullTitleOf(test, context));
+  },
+  afterTest: async (test, context, result) => {
+    await captureAfter(fullTitleOf(test, context));
+    writeStepRecord(test, context, result);
+  },
 };
