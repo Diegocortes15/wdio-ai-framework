@@ -402,6 +402,22 @@ Capture per-test PASS/FAIL output. Record one line per test for the PR body's Ve
 "A green test is not yet evidence":** is the value it asserts unique on that screen, and would it
 still pass with its Act step deleted? A green run is exactly when those two mistakes are invisible.
 
+**The counting half is mechanical — let the repository do it.** When it offers an assertion audit,
+run the target spec with it on and read the report (here: `AUDIT_ASSERTIONS=1` on the run, then
+`npm run audit:assertions -- <spec>`; discover the script from `package.json` rather than assuming
+the name). It captures every readable string on screen before and after each test, and reports two
+things per test:
+
+- **AMBIGUOUS** — the asserted value appears more than once on screen at the end. The assertion may
+  be reading a different element that happens to hold the same text.
+- **PRE-EXISTING** — the value was already on screen before the test acted, so it could hold with
+  the Act step deleted.
+
+**Neither is a failure, and neither is a verdict.** A duplicated value can be asserted perfectly
+well, and a test may mean to re-check something that was already there. The audit removes the
+counting, not the judgement: answer each line in the PR body with what you checked. The one answer
+that is not allowed is silence.
+
 - Where the answer is clear, say so in one line per test in the PR body's Verification section.
 - Where it is not, make the run that settles it — a state where the candidate values differ, or the
   test without its action — and report what that run showed.

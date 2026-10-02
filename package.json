@@ -14,6 +14,7 @@
     "test:smoke:android": "wdio run ./config/wdio.android.conf.ts --mochaOpts.grep @smoke",
     "test:smoke:ios": "wdio run ./config/wdio.ios.conf.ts --mochaOpts.grep @smoke",
     "test:unit": "tsx --test src/tcms/*.test.ts",
+    "audit:assertions": "tsx scripts/audit-assertions.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
