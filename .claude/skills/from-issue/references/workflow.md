@@ -398,6 +398,20 @@ Capture per-test PASS/FAIL output. Record one line per test for the PR body's Ve
 - ✅ PASS → `` `<test title>` — ✅ PASS ``
 - ❌ FAIL → `` `<test title>` — ❌ FAIL: <one-line message> `` plus a `<details>` block with verbatim failure output
 
+**Then ask, of each new test, the two questions in [`wdio-conventions.md`](wdio-conventions.md)
+"A green test is not yet evidence":** is the value it asserts unique on that screen, and would it
+still pass with its Act step deleted? A green run is exactly when those two mistakes are invisible.
+
+- Where the answer is clear, say so in one line per test in the PR body's Verification section.
+- Where it is not, make the run that settles it — a state where the candidate values differ, or the
+  test without its action — and report what that run showed.
+- Where the application cannot be driven to such a state, ship the test and say in the PR body what
+  was not ruled out. Never silently.
+
+**The expected value comes from the acceptance criterion, never from what the run returned.** If the
+two differ, that is a finding for a person (ADR-0030) — a test corrected to match the application is
+how a defect becomes the specification.
+
 If every test passed **and** Step 9 was clean, continue to Step 11. If anything failed, go to **Step 10.5** — a run never opens a red PR (ADR-0020).
 
 ### 10.5. Fix loop — the no-red-PR gate
