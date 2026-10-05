@@ -110,6 +110,31 @@ test('add product', async ({ inventoryPage }) => {
 });
 ```
 
+### Anti-Self-validating: the assertion that could have read another element
+
+Having an `expect` is not the same as being able to fail. This one shipped green here:
+
+```ts
+// BAD: after decreasing 6 → 5, the badge reads 5 AND the row's quantity reads 5.
+// The locator resolved to the row. The badge could have been frozen, wrong or
+// absent, and this test would still be green.
+await CartPage.decreaseQuantity();
+await expect(CartPage.navigation.cartBadge).toHaveText('5');
+```
+
+The test is not wrong on its face — the fix is not a different assertion, it is a
+state in which the two cannot agree:
+
+```ts
+// 6 of one product and 1 of another: the badge reads 7, the rows read 6 and 1.
+// Now a locator pointing at a row produces 6, and the test fails as it should.
+```
+
+Ask it of any assertion whose expected value is short — a number, a word like
+`Active`, a price. Where the repository offers an assertion audit, it counts the
+duplicates and names the element the test read; where it does not, count by hand
+on the screen the test stands on.
+
 ## When in doubt
 
 Prefer **Isolated** and **Self-validating** above the others. Fast and Repeatable matter at scale; Timely is about workflow not code. Isolated + Self-validating directly determine whether a test is trustworthy.
