@@ -122,10 +122,11 @@ making the assumption.
   answers in the PR body: is the value it asserts unique on that screen, and would it still pass with
   its Act step deleted. The counting half is a script: a run with `AUDIT_ASSERTIONS=1` captures every readable string on
   screen before and after each test, and `npm run audit:assertions` reports the values a test asserts
-  that appear more than once at the end, or were already there before it acted. Run against the cart
-  spec the day it was written, it raised four questions, one of them the exact value that had been
-  read off the wrong element. **Still not a gate:** it reports, a person answers, and a test that
-  asserts the right value on the wrong element in a state nobody separated still passes.
+  that appear more than once at the end, or were already there before it acted. It also records **which element each lookup
+  resolved to** and matches it against the candidates, so a duplicated value usually comes back
+  answered: _the test read the tab bar's badge, not the row's quantity_. Run against the cart spec it
+  raised 12 questions across both platforms and traced most of them. **Still not a gate:** it
+  reports, a person answers, and what it cannot trace it says plainly rather than guessing.
 - **The suite never runs in CI.** No device. PR checks cover install, types, lint, format and the unit
   tests of the Qase sync; whether the tests pass is established on one developer's machine.
 - **A dry run is not an independent rerun.** The two `/from-issue` rehearsals of OR-1 produced identical

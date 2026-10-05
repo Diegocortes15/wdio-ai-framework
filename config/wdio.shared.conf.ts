@@ -7,7 +7,7 @@
 // runtime by Node itself (onPrepare's rmSync) are relative to the working
 // directory, which is the project root.
 import { rmSync } from 'node:fs';
-import { captureAfter, captureBefore } from '../src/hooks/assertion-audit';
+import { captureAfter, captureBefore, recordLookup } from '../src/hooks/assertion-audit';
 import {
   platformOfCapability,
   startStepRecord,
@@ -72,6 +72,24 @@ export const sharedConfig: WebdriverIO.Config = {
   beforeTest: async (test, context) => {
     startStepRecord();
     await captureBefore(fullTitleOf(test, context));
+  },
+  // Every element lookup, and what it resolved to — the one thing that answers
+  // "which element did this test actually read?", and the difference between
+  // counting a duplicated value and explaining it. `findElements` is included
+  // because a query over rows resolves through it.
+  afterCommand: async (commandName, args, result) => {
+    if (commandName !== 'findElement' && commandName !== 'findElements') return;
+    // One lookup, two shapes: the protocol's W3C key for a single element, and
+    // `elementId` on the objects WDIO hands back for a collection. Reading only
+    // the first traced every `$` and no `$$` — and a row query is exactly a `$$`.
+    const W3C = 'element-6066-11e4-a52e-4f735466cecf';
+    const found = (Array.isArray(result) ? result : [result]) as (
+      Record<string, string> | undefined
+    )[];
+    for (const element of found) {
+      const elementId = element?.[W3C] ?? element?.elementId;
+      if (elementId) await recordLookup(JSON.stringify(args), elementId);
+    }
   },
   afterTest: async (test, context, result) => {
     await captureAfter(fullTitleOf(test, context));

@@ -408,8 +408,11 @@ run the target spec with it on and read the report (here: `AUDIT_ASSERTIONS=1` o
 the name). It captures every readable string on screen before and after each test, and reports two
 things per test:
 
-- **AMBIGUOUS** — the asserted value appears more than once on screen at the end. The assertion may
-  be reading a different element that happens to hold the same text.
+- **AMBIGUOUS** — the asserted value appears more than once on screen at the end. When the run also
+  traced the lookup, the report names **the element the test read** and the rivals it was not, which
+  is an answer rather than a question: `the test read: … Button[Cart-tab-item] …` beside
+  `also on screen: … Table > Cell …`. When it could not trace one, it says so, and the question
+  stands.
 - **PRE-EXISTING** — the value was already on screen before the test acted, so it could hold with
   the Act step deleted.
 
