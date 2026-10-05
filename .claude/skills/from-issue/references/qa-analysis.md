@@ -34,18 +34,21 @@ When ACs share the same setup + flow but differ only in inputs or expected outpu
 
 ```ts
 const scenarios = [
-  { postal: '12345', expectAccepted: true, description: 'US' },
-  { postal: 'AB1 2CD', expectAccepted: true, description: 'UK' },
-  { postal: '', expectError: 'Postal Code is required', description: 'empty' },
+  { postal: '12345', description: 'a five-digit US code', accepted: true },
+  { postal: 'AB1 2CD', description: 'an alphanumeric UK code', accepted: true },
+  { postal: '', description: 'an empty code', error: 'Postal Code is required' },
 ];
-for (const scenario of scenarios) {
-  test(`@standard checkout postal validation — ${scenario.description}`, async ({
-    /* ... */
-  }) => {
-    /* ... */
+
+for (const { postal, description, accepted, error } of scenarios) {
+  it(`checkout accepts or rejects ${description}`, async () => {
+    /* one straight-line path; the scenario supplies the input and the expectation */
   });
 }
 ```
+
+The loop is around the `it(...)`, never inside a test body — a conditional inside one test is the
+anti-pattern this file's sibling `wdio-conventions.md` rejects. And the title says what the case is,
+because a parameterized title is what a reader finds the failure by.
 
 **Why:** less duplication, easier to add cases, single point of maintenance for the flow.
 

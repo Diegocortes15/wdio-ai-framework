@@ -308,8 +308,8 @@ For each new test record (already bucket-classified in Step 6):
    **The same assertion for a different account is not a duplicate.** `the cart badge counts units` for one user and for another are two tests with the same sentence; only one of them has coverage until both exist. Skipping the second hands back a PR claiming coverage that does not exist — the failure ADR-0020 exists to prevent, arriving as a green run rather than a red one.
 
    Ignore a trailing ` @smoke` when comparing: it is a tag, not behaviour.
-2. **Locate the bucket** _within the resolved context describe_ (above). Find the `test.describe('Positive' | 'Negative' | 'Edge', () => { ... })` block matching the record's `bucket`.
-   - Block exists → `Edit` to insert the new `test(...)` at the end of that block (before its closing `});`).
+2. **Locate the bucket** _within the resolved context describe_ (above). Find the `describe('Positive' | 'Negative' | 'Edge', () => { ... })` block matching the record's `bucket`.
+   - Block exists → `Edit` to insert the new test at the end of that block (before its closing `});`) — an `it(...)`, or the helper the record calls for: `itFails(...)` for an expected failure, `itOn(...)` for a test one platform does not have.
    - Block absent → insert a new bucket describe in the fixed **Positive → Negative → Edge** order, positioned correctly relative to existing buckets.
 3. **Render the test body** exactly as Step 7 would (no spec-level `step`; steps live in Page Object methods per [`wdio-conventions.md`](wdio-conventions.md)).
 
