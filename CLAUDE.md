@@ -24,12 +24,12 @@ export ANDROID_HOME="$HOME/Library/Android/sdk"
 export JAVA_HOME="$(/usr/libexec/java_home)"
 export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
 
-npm run device:up [android|ios]  # boots what is missing (AVD + its ANR preflight, simulator,
-                     # exploration Appium), leaves what is up alone. Pieces: emulator, simulator
+npm run device:up [android|ios]  # boots what is missing (AVD + ANR preflight, simulator, Appium)
 npm test             # both platforms, in sequence — the gate before a PR
 npm run test:android # one platform, the fast loop (also test:ios); -- --suite cart runs one feature
-npm run test:smoke   # tests whose title ends in @smoke, on both platforms
-npm run test:unit    # unit tests of the Qase sync (no device)
+npm run test:smoke   # titles ending in @smoke, both platforms; test:unit = the Qase sync, no device
+AUDIT_ASSERTIONS=1 npm run test:android   # then audit:assertions -- <spec>: which asserted values
+                     # are ambiguous on screen, or were already there before the test acted
 npm run typecheck && npm run lint && npm run format:check
 ```
 

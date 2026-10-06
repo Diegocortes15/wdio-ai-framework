@@ -152,6 +152,40 @@ Each of these produced a wrong conclusion once, on a real app:
 - **An accessibility id can outlive the state it names.** One menu row kept the id `LogOut-menu-item`
   whether the user was signed in or out; only the label changed. Read the label.
 
+## A green test is not yet evidence
+
+A test that passes proves its assertion held. It does not prove the assertion was **about what you
+think**, and two classes of mistake survive every gate this repository has — the typecheck, the lint
+rules, the run itself. Both have happened here, and both were found by hand, after the PR.
+
+**1. The value you assert is not unique on that screen.** The iOS cart badge was addressed as "the
+StaticText whose name is a number". On the cart screen a row's quantity is one of those too, and
+after decreasing from 6 the row and the badge both read `5`: the assertion passed on the row, and
+would have kept passing with the badge frozen, wrong or gone.
+
+> **Prove the locator in a state where the candidates differ.** Two products instead of one, a
+> quantity that is not the item count, a price that is not the total. If the application cannot be
+> driven to such a state in this run, the test still ships — but say in the PR body that the locator
+> was verified only where the values coincide, so a reviewer knows what was not ruled out.
+
+The same reasoning covers a query that returns a collection: one row is the state where every wrong
+implementation looks right, so verify it with more than one item (see "Page Object methods").
+
+**2. The state you assert already held before the action.** An assertion placed after an action does
+not mean the action caused it. The suite carries a live example: a test asserts three elements are
+displayed on the login screen, and the `open()` that precedes it already waited for one of them —
+that part of the assertion cannot fail.
+
+> **Ask of every test: would this still pass if the Act step were deleted?** When the honest answer
+> is "maybe", delete it and run it once. A test that passes without its action is not a test; either
+> the assertion moves to something the action actually changes, or the test says what it really
+> covers. Absences deserve this most: "the badge does not appear" passes beautifully on a screen
+> that never had one.
+
+Neither check is a step to perform mechanically on every test — they are two questions to ask while
+writing each assertion, and a run to make when the answer is not obvious. What they are not is
+optional because the suite is green: green is when these mistakes are invisible.
+
 ## Auto-waiting assertions
 
 Use `expect-webdriverio` matchers on elements. They retry until they pass or `waitforTimeout` expires.

@@ -308,8 +308,8 @@ For each new test record (already bucket-classified in Step 6):
    **The same assertion for a different account is not a duplicate.** `the cart badge counts units` for one user and for another are two tests with the same sentence; only one of them has coverage until both exist. Skipping the second hands back a PR claiming coverage that does not exist — the failure ADR-0020 exists to prevent, arriving as a green run rather than a red one.
 
    Ignore a trailing ` @smoke` when comparing: it is a tag, not behaviour.
-2. **Locate the bucket** _within the resolved context describe_ (above). Find the `test.describe('Positive' | 'Negative' | 'Edge', () => { ... })` block matching the record's `bucket`.
-   - Block exists → `Edit` to insert the new `test(...)` at the end of that block (before its closing `});`).
+2. **Locate the bucket** _within the resolved context describe_ (above). Find the `describe('Positive' | 'Negative' | 'Edge', () => { ... })` block matching the record's `bucket`.
+   - Block exists → `Edit` to insert the new test at the end of that block (before its closing `});`) — an `it(...)`, or the helper the record calls for: `itFails(...)` for an expected failure, `itOn(...)` for a test one platform does not have.
    - Block absent → insert a new bucket describe in the fixed **Positive → Negative → Edge** order, positioned correctly relative to existing buckets.
 3. **Render the test body** exactly as Step 7 would (no spec-level `step`; steps live in Page Object methods per [`wdio-conventions.md`](wdio-conventions.md)).
 
@@ -397,6 +397,39 @@ Capture per-test PASS/FAIL output. Record one line per test for the PR body's Ve
 
 - ✅ PASS → `` `<test title>` — ✅ PASS ``
 - ❌ FAIL → `` `<test title>` — ❌ FAIL: <one-line message> `` plus a `<details>` block with verbatim failure output
+
+**Then ask, of each new test, the two questions in [`wdio-conventions.md`](wdio-conventions.md)
+"A green test is not yet evidence":** is the value it asserts unique on that screen, and would it
+still pass with its Act step deleted? A green run is exactly when those two mistakes are invisible.
+
+**The counting half is mechanical — let the repository do it.** When it offers an assertion audit,
+run the target spec with it on and read the report (here: `AUDIT_ASSERTIONS=1` on the run, then
+`npm run audit:assertions -- <spec>`; discover the script from `package.json` rather than assuming
+the name). It captures every readable string on screen before and after each test, and reports two
+things per test:
+
+- **AMBIGUOUS** — the asserted value appears more than once on screen at the end. When the run also
+  traced the lookup, the report names **the element the test read** and the rivals it was not, which
+  is an answer rather than a question: `the test read: … Button[Cart-tab-item] …` beside
+  `also on screen: … Table > Cell …`. When it could not trace one, it says so, and the question
+  stands.
+- **PRE-EXISTING** — the value was already on screen before the test acted, so it could hold with
+  the Act step deleted.
+
+**Neither is a failure, and neither is a verdict.** A duplicated value can be asserted perfectly
+well, and a test may mean to re-check something that was already there. The audit removes the
+counting, not the judgement: answer each line in the PR body with what you checked. The one answer
+that is not allowed is silence.
+
+- Where the answer is clear, say so in one line per test in the PR body's Verification section.
+- Where it is not, make the run that settles it — a state where the candidate values differ, or the
+  test without its action — and report what that run showed.
+- Where the application cannot be driven to such a state, ship the test and say in the PR body what
+  was not ruled out. Never silently.
+
+**The expected value comes from the acceptance criterion, never from what the run returned.** If the
+two differ, that is a finding for a person (ADR-0030) — a test corrected to match the application is
+how a defect becomes the specification.
 
 If every test passed **and** Step 9 was clean, continue to Step 11. If anything failed, go to **Step 10.5** — a run never opens a red PR (ADR-0020).
 

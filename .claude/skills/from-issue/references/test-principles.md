@@ -71,44 +71,80 @@ it('adding a product shows a cart badge of 1', async () => {
 });
 ```
 
-### Anti-Isolated: shared state via beforeAll
+### Anti-Isolated: state built once and shared
 
 ```ts
-// BAD: cart state persists across tests, test order matters
-let cart: CartPage;
-test.beforeAll(async ({ browser }) => {
-  cart = /* shared singleton */;
+// BAD: the arrange runs once, so the second test depends on the first
+before(async () => {
+  await CatalogPage.openProduct(PRODUCT);
+  await ProductDetailPage.addToCart();
 });
-test('add item', async () => {
-  await cart.add('X');
+
+it('the cart lists the product', async () => {
+  await CartPage.open();
+  expect(await CartPage.getProductNames()).toEqual([PRODUCT]);
 });
-test('cart shows 1 item', async () => {
-  await cart.expectCount(1); // depends on first test running first
+
+it('the cart badge reads 1', async () => {
+  // only true if the test above ran, and ran first
+  await expect(CatalogPage.navigation.cartBadge).toHaveText('1');
 });
 ```
 
-Rewrite: each test gets its own fixture-provided page; setup happens per-test.
+Rewrite: every test arranges what it needs. There are no fixtures to inject one — Page Objects are
+singletons and the spec calls them directly.
+
+On this framework the anti-pattern does not even buy the speed it is reaching for: a root hook
+relaunches the app before **every** test, so anything a `before` built is gone before the first test
+runs (see `wdio-conventions.md` "Test isolation"). Shared setup here does not couple the tests — it
+simply is not there any more.
 
 ### Anti-Self-validating: assertion-free test
 
 ```ts
-// BAD: test always passes if the page loads, even if the action is broken
-test('add product', async ({ inventoryPage }) => {
-  await inventoryPage.goto();
-  await inventoryPage.addProductToCart('Sauce Labs Backpack');
-  // No expect(). Test passes even if the cart didn't update.
+// BAD: green as long as the taps land, even if nothing reached the cart
+it('adding a product fills the cart', async () => {
+  await CatalogPage.openProduct(PRODUCT);
+  await ProductDetailPage.addToCart();
+  // No expect(). The cart could have stayed empty.
 });
 ```
 
-Rewrite: every test has an `expect(...)` at the end.
+Rewrite: every test ends on an assertion about what the action changed.
 
 ```ts
-test('add product', async ({ inventoryPage }) => {
-  await inventoryPage.goto();
-  await inventoryPage.addProductToCart('Sauce Labs Backpack');
-  expect(await inventoryPage.header.cartBadge.getCount()).toBe(1);
+it('adding a product fills the cart', async () => {
+  await CatalogPage.openProduct(PRODUCT);
+  await ProductDetailPage.addToCart();
+
+  await expect(ProductDetailPage.navigation.cartBadge).toHaveText('1');
 });
 ```
+
+### Anti-Self-validating: the assertion that could have read another element
+
+Having an `expect` is not the same as being able to fail. This one shipped green here:
+
+```ts
+// BAD: after decreasing 6 → 5, the badge reads 5 AND the row's quantity reads 5.
+// The locator resolved to the row. The badge could have been frozen, wrong or
+// absent, and this test would still be green.
+await CartPage.decreaseQuantity();
+await expect(CartPage.navigation.cartBadge).toHaveText('5');
+```
+
+The test is not wrong on its face — the fix is not a different assertion, it is a
+state in which the two cannot agree:
+
+```ts
+// 6 of one product and 1 of another: the badge reads 7, the rows read 6 and 1.
+// Now a locator pointing at a row produces 6, and the test fails as it should.
+```
+
+Ask it of any assertion whose expected value is short — a number, a word like
+`Active`, a price. Where the repository offers an assertion audit, it counts the
+duplicates and names the element the test read; where it does not, count by hand
+on the screen the test stands on.
 
 ## When in doubt
 
