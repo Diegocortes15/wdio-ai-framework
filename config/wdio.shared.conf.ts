@@ -8,6 +8,7 @@
 // directory, which is the project root.
 import { rmSync } from 'node:fs';
 import { captureAfter, captureBefore, recordLookup } from '../src/hooks/assertion-audit';
+import { captureFailure } from '../src/hooks/failure-evidence';
 import {
   platformOfCapability,
   startStepRecord,
@@ -92,7 +93,11 @@ export const sharedConfig: WebdriverIO.Config = {
     }
   },
   afterTest: async (test, context, result) => {
-    await captureAfter(fullTitleOf(test, context));
+    const title = fullTitleOf(test, context);
+    await captureAfter(title);
+    // A failed test leaves its screen behind: diagnosing it should not start by
+    // reproducing it. Always on — a failure is rare and the capture is cheap.
+    if (!result.passed) await captureFailure(title, result.error);
     writeStepRecord(test, context, result);
   },
 };
