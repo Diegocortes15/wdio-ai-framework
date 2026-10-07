@@ -1,137 +1,126 @@
 #!/usr/bin/env node
+// Gathers what a failed run left behind into one JSON document: the failure, its
+// evidence folder, the steps the test ran, the acceptance criterion it traces
+// to, and what the same test did on the other platform.
 //
-// Gather everything a bug report needs from the last run, as structured JSON.
+// Locating facts is lookup, not judgement, so it is a script rather than prose.
+// It reads only what the run wrote — it never re-runs anything, and it never
+// guesses a fact it cannot find: a missing field says why it is missing.
 //
-// Deterministic on purpose: finding the failure, its evidence, the acceptance criterion it
-// traces to and the observations recorded during it is lookup, not judgment. The skill turns
-// this into prose; it should never have to hunt for the facts. Plain Node, no dependencies,
-// no build step.
+// There is no evidence-collecting step after this one. The framework writes each
+// failure's screenshot, page source and error into a single folder as it
+// happens, so there is nothing left to assemble — which is the opposite of the
+// web framework this skill came from, where evidence landed in hashed
+// directories and had to be gathered.
 //
-// Usage:  node collect-failure.mjs [--grep <substring of the test title>]
-// Exit:   0 with JSON on stdout · 3 when the run had no failures · 4 when no results file
+// Usage: node collect-failure.mjs [--grep "<substring of the test title>"]
+// Exit:  0 JSON on stdout · 3 no failures in the last run · 4 nothing was run
 
-import { readFileSync, existsSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-const RESULTS = join('test-results', 'results.json');
-const OBSERVATIONS = join('.observations', 'observations.json');
-const TCMS_DIR = '.tcms/records';
+const FAILURES = join('test-results', 'failures');
+const STEPS = join('test-results', 'steps');
+const RECORDS = join('.tcms', 'records');
 
-const ANSI = new RegExp('\\u001b\\[[0-9;]*m', 'g');
-const stripAnsi = (s = '') => s.replace(ANSI, '');
+const grepAt = process.argv.indexOf('--grep');
+const grep = grepAt > -1 ? process.argv[grepAt + 1] : undefined;
 
-/** Playwright nests specs under arbitrarily deep suites. */
-function* eachSpec(node) {
-  for (const spec of node.specs ?? []) yield spec;
-  for (const suite of node.suites ?? []) yield* eachSpec(suite);
+const dirs = (path) =>
+  existsSync(path) ? readdirSync(path).filter((d) => statSync(join(path, d)).isDirectory()) : [];
+const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'));
+
+if (!existsSync(FAILURES)) {
+  console.error(
+    `No ${FAILURES}. Run the suite first — this reads what a run wrote, and re-running it is yours to decide.`,
+  );
+  process.exit(4);
 }
 
-function expectedAndReceived(message) {
-  const expected = message.match(/^\s*Expected:\s*(.+)$/m)?.[1]?.trim();
-  const received = message.match(/^\s*Received:\s*(.+)$/m)?.[1]?.trim();
-  return expected || received ? { expected, received } : undefined;
-}
-
-/**
- * The acceptance criterion this test traces to, from the committed TCMS record.
- *
- * Returns `{ acText }` when resolved, or `{ missing: <reason> }` — never a bare undefined.
- * The reason matters: `no-matching-record` is the expected state after a run blocked by
- * ADR-0020, which writes no records artifact at all, and that is the very situation
- * /report-bug exists for. A draft that silently falls back to restating the failed
- * assertion tells a triager nothing about what the system was supposed to do, and worse,
- * gives no hint that the absence is by design rather than an oversight.
- */
-function acceptanceCriterion(feature, title) {
-  const path = join(TCMS_DIR, `${feature}.json`);
-  if (!existsSync(path)) return { missing: 'no-records-file' };
-  let records;
-  try {
-    ({ records = [] } = JSON.parse(readFileSync(path, 'utf-8')));
-  } catch {
-    return { missing: 'unreadable-records-file' };
-  }
-  const acText = records.find((r) => r.title === title)?.acText;
-  return acText ? { acText } : { missing: 'no-matching-record' };
-}
-
-function observationsFor(attachment) {
-  if (!attachment?.body) return [];
-  try {
-    return JSON.parse(Buffer.from(attachment.body, 'base64').toString('utf-8'));
-  } catch {
-    return [];
+// Every failure of the last run, on every platform it ran on.
+const failures = [];
+for (const platform of dirs(FAILURES)) {
+  for (const slug of dirs(join(FAILURES, platform))) {
+    const dir = join(FAILURES, platform, slug);
+    const file = join(dir, 'failure.json');
+    if (existsSync(file)) failures.push({ ...readJson(file), slug, evidence: dir });
   }
 }
+if (failures.length === 0) {
+  console.error('The last run recorded no failures. There is nothing to report.');
+  process.exit(3);
+}
 
-function main() {
-  const grepIndex = process.argv.indexOf('--grep');
-  const grep = grepIndex === -1 ? undefined : process.argv[grepIndex + 1];
+const selected = grep ? failures.filter((f) => f.title.includes(grep)) : failures;
+if (selected.length === 0) {
+  console.error(`No failure matched --grep "${grep}". Titles seen: ${failures.map((f) => f.title).join(' | ')}`);
+  process.exit(3);
+}
 
-  if (!existsSync(RESULTS)) {
-    console.error(`collect-failure: ${RESULTS} not found — run the suite first.`);
-    process.exit(4);
+// The step titles the test ran, written by the same run. Never invented: a repro
+// step nobody executed is how a report sends someone down a path that does not exist.
+function stepsOf(platform, title) {
+  const dir = join(STEPS, platform);
+  if (!existsSync(dir)) return { missing: 'no step records for this platform' };
+  for (const file of readdirSync(dir).filter((f) => f.endsWith('.json'))) {
+    const record = readJson(join(dir, file));
+    if (record.title === title) {
+      // `file` comes from the same record: a report has to name the test that
+      // failed, and the run is the only thing that knows where it lives.
+      return { steps: (record.steps ?? []).map((s) => s.title ?? s), file: record.file };
+    }
   }
-  const report = JSON.parse(readFileSync(RESULTS, 'utf-8'));
+  return { missing: 'no step record matched this test' };
+}
 
-  const failures = [];
-  for (const spec of eachSpec({ suites: report.suites ?? [] })) {
-    if (grep && !spec.title.includes(grep)) continue;
-    for (const test of spec.tests ?? []) {
-      for (const result of test.results ?? []) {
-        if (result.status !== 'failed' && result.status !== 'timedOut') continue;
-        const message = stripAnsi(result.error?.message ?? '');
-        const byName = Object.fromEntries((result.attachments ?? []).map((a) => [a.name, a]));
-        const feature = spec.file.split('/')[0];
-
-        // results.json outlives the spec that produced it, so a stale run can describe a
-        // test that has since been renamed or deleted. Say so rather than letting a reader
-        // chase a file that is not there.
-        const specPath = join('tests', spec.file);
-        const staleRun = !existsSync(specPath);
-
-        failures.push({
-          title: spec.title,
-          file: spec.file,
-          line: spec.line,
-          ...(staleRun
-            ? {
-                staleRun:
-                  `${specPath} no longer exists — these results are from an earlier run. ` +
-                  'Re-run the suite before filing anything from them.',
-              }
-            : {}),
-          project: test.projectName ?? 'unknown',
-          feature,
-          status: result.status,
-          // The Page Objects wrap each action in test.step, so these ARE the repro steps.
-          reproSteps: (result.steps ?? []).map((s) => s.title),
-          ...acceptanceCriterion(feature, spec.title),
-          error: { message, ...expectedAndReceived(message) },
-          observations: observationsFor(byName.observations),
-          evidence: {
-            screenshot: byName.screenshot?.path,
-            video: byName.video?.path,
-            trace: byName.trace?.path,
-            errorContext: byName['error-context']?.path,
-          },
-        });
+// The acceptance criterion, from the records /from-issue committed. A run blocked
+// before those are written legitimately has none — that is not an error.
+function criterionOf(title) {
+  if (!existsSync(RECORDS)) return { missing: 'no records artifact in this repository' };
+  for (const file of readdirSync(RECORDS).filter((f) => f.endsWith('.json'))) {
+    for (const record of readJson(join(RECORDS, file)).records ?? []) {
+      if (title.includes(record.title)) {
+        return {
+          acceptanceCriterion: record.acText,
+          jira: record.jira,
+          platforms: record.platforms,
+          expectedFailure: record.expectedFailure,
+        };
       }
     }
   }
-
-  if (failures.length === 0) {
-    console.error('collect-failure: the last run had no failures.');
-    process.exit(3);
-  }
-
-  console.log(
-    JSON.stringify(
-      { generatedAt: new Date().toISOString().slice(0, 10), failures, knownObservations: OBSERVATIONS },
-      null,
-      2,
-    ),
-  );
+  return { missing: 'no-matching-record' };
 }
 
-main();
+// What the same test did on the other platform. This is the question a mobile
+// report has to answer and a web one never had: the same assertion can be a
+// defect on one platform and correct behaviour on the other.
+function elsewhere(platform, title) {
+  return dirs(STEPS)
+    .filter((other) => other !== platform)
+    .map((other) => {
+      if (stepsOf(other, title).missing) {
+        return { platform: other, outcome: 'did not run, or was skipped there' };
+      }
+      const failedThere = dirs(join(FAILURES, other)).some((slug) => {
+        const file = join(FAILURES, other, slug, 'failure.json');
+        return existsSync(file) && readJson(file).title === title;
+      });
+      return { platform: other, outcome: failedThere ? 'failed there too' : 'passed there' };
+    });
+}
+
+const report = selected.map((failure) => ({
+  title: failure.title,
+  platform: failure.platform,
+  app: failure.app,
+  when: failure.when,
+  error: failure.error,
+  evidence: failure.evidence,
+  notes: failure.notes ?? [],
+  ...stepsOf(failure.platform, failure.title),
+  ...criterionOf(failure.title),
+  otherPlatforms: elsewhere(failure.platform, failure.title),
+}));
+
+console.log(JSON.stringify(report, null, 2));
