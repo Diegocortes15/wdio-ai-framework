@@ -46,17 +46,17 @@ open exploration session. How to use it: `wdio-conventions.md`.
 
 ## Where things live
 
-| What                                  | Where                                                                                   |
-| ------------------------------------- | --------------------------------------------------------------------------------------- |
-| Page Objects, Components, Specs       | `src/pages/` (singletons), `src/components/`, `tests/<feature>/*.spec.ts`               |
-| WDIO configs                          | `config/wdio.shared.conf.ts` + one per platform + `capabilities/`                       |
-| Platform helpers, platform data       | `byPlatform`/`onlyOn` in `src/utils/platform.ts`, `itOn` in `platform-only.ts`; `data/` |
-| App reset before each test            | `src/hooks/reset-app.ts` (Mocha root hook)                                              |
-| Expected failure (ADR-0024)           | `itFails` in `src/utils/expected-failure.ts`                                            |
-| Named steps (`test.step`)             | `step` in `src/utils/step.ts`; run records in `test-results/steps/<platform>/`          |
-| Qase catalogue sync                   | `src/tcms/`, `.tcms/records/` (ADR-0041, ADR-0043)                                      |
-| Apps, Appium server log               | `apps/`, `logs/` — both gitignored                                                      |
-| Skills; what broke here + the numbers | `.claude/skills/<name>/`; `docs/failure-modes.md`                                       |
+| What                                  | Where                                                                                      |
+| ------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Page Objects, Components, Specs       | `src/pages/` (singletons), `src/components/`, `tests/<feature>/*.spec.ts`                  |
+| WDIO configs                          | `config/wdio.shared.conf.ts` + one per platform + `capabilities/`                          |
+| Platform helpers, platform data       | `byPlatform`/`onlyOn` in `src/utils/platform.ts`, `itOn` in `platform-only.ts`; `data/`    |
+| App reset before each test            | `src/hooks/reset-app.ts` (Mocha root hook)                                                 |
+| Expected failure (ADR-0024)           | `itFails` in `src/utils/expected-failure.ts`                                               |
+| Named steps; what a failure leaves    | `step` in `src/utils/step.ts`; `test-results/steps/<platform>/` and `failures/<platform>/` |
+| Qase catalogue sync                   | `src/tcms/`, `.tcms/records/` (ADR-0041, ADR-0043)                                         |
+| Apps, Appium server log               | `apps/`, `logs/` — both gitignored                                                         |
+| Skills; what broke here + the numbers | `.claude/skills/<name>/`; `docs/failure-modes.md`                                          |
 
 There is **no fixture layer**: tests import Page Objects directly and use the WDIO globals (`$`, `driver`,
 `expect`). `@data/*`, `@pages/*`, `@components/*`, `@utils/*` map to `data/`, `src/…` (`tsconfig.json`).
